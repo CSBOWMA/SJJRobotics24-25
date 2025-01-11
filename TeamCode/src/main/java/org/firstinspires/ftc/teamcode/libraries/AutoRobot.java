@@ -4,7 +4,6 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.*;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.teamcode.libraries.vector.Vector2D;
 import org.firstinspires.ftc.teamcode.libraries.MovementCurves.MovementCurves;
 
 import static java.lang.Math.*;
@@ -17,7 +16,7 @@ public class AutoRobot {
     private DcMotor backLeftDrive;
 
     private Servo outtakeAngle;
-    private final double OUTTAKE_ANGLE_DOWN_POSITION = 0;
+    private final double OUTTAKE_ANGLE_DROP_POSITION = 0;
     private final double OUTTAKE_ANGLE_LOAD_POSITION = 0;
 
     private Servo outtakeClaw;
@@ -27,7 +26,7 @@ public class AutoRobot {
 
     private Servo intakeAngle;
     private final double INTAKE_ANGLE_LOAD_POSITION = 0;
-    private final double INTAKE_ANGLE_DROP_POSITION = 0;
+    private final double INTAKE_ANGLE_GRAB_POSITION = 0;
 
     private Servo intakeClaw;
     private final double INTAKE_CLAW_OPEN_POSITION = 0;
@@ -1089,6 +1088,65 @@ public class AutoRobot {
 
     }
 
+    public void intakeClawOpen() {
+        intakeClaw.setPosition(INTAKE_CLAW_OPEN_POSITION);
+    }
+
+    public void intakeClawClose() {
+        intakeClaw.setPosition(INTAKE_CLAW_OPEN_POSITION);
+    }
+
+    public void intakeAngleGrab() {
+        intakeAngle.setPosition(INTAKE_ANGLE_GRAB_POSITION);
+    }
+
+    public void intakeAngleLoad() {
+        intakeAngle.setPosition(INTAKE_ANGLE_LOAD_POSITION);
+    }
+
+    public void outtakeClawOpen() {
+       outtakeClaw.setPosition(OUTTAKE_CLAW_OPEN_POSITION);
+    }
+
+    public void outtakeClawClose() {
+        outtakeClaw.setPosition(OUTTAKE_CLAW_CLOSED_POSITION);
+    }
+
+    public void outtakeAngleLoad() {
+        outtakeAngle.setPosition(OUTTAKE_ANGLE_LOAD_POSITION);
+    }
+
+    public void outtakeAngleDrop() {
+        outtakeAngle.setPosition(OUTTAKE_ANGLE_DROP_POSITION);
+    }
+
+    public void grabAndLoad() {
+        elevatorLoadPosition();
+        outtakeAngleLoad();
+        intakeClawClose();
+        waitSeconds(.2);
+        intakeAngleLoad();
+        elevatorBottom();
+        waitSeconds(.1);
+        outtakeClawClose();
+        waitSeconds(.2);
+        intakeClawOpen();
+        waitSeconds(.1);
+        elevatorTop();
+        outtakeAngleDrop();
+    }
+
+    public void dropSampleAndReset() {
+        outtakeClawOpen();
+        waitSeconds(.2);
+        outtakeAngleLoad();
+        elevatorLoadPosition();
+        intakeClawOpen();
+        intakeAngleGrab();
+    }
+
+
+
     public void elevatorTop() {
         elevator2.setTargetPosition(3300);
         elevator1.setTargetPosition(3300);
@@ -1142,7 +1200,7 @@ public class AutoRobot {
 
         outtakeAngle = hardwareMap.get(Servo.class, "outtakeAngle");
         outtakeClaw = hardwareMap.get(Servo.class, "outtakeClaw");
-        outtakeAngle.setPosition(OUTTAKE_ANGLE_DOWN_POSITION);
+        outtakeAngle.setPosition(OUTTAKE_ANGLE_DROP_POSITION);
         intakeAngle = hardwareMap.get(Servo.class, "intakeAngle");
         intakeClaw = hardwareMap.get(Servo.class, "intakeClaw");
 

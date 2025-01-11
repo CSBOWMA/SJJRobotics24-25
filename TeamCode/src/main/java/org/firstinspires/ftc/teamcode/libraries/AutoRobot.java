@@ -16,17 +16,28 @@ public class AutoRobot {
     private DcMotor frontLeftDrive;
     private DcMotor backLeftDrive;
 
-    // private Servo outtakeAngle; needs to be implemented
-    // private Servo outtakeClaw; needs to be implemented
+    private Servo outtakeAngle;
+    private final double OUTTAKE_ANGLE_DOWN_POSITION = 0;
+    private final double OUTTAKE_ANGLE_LOAD_POSITION = 0;
 
-    //private Servo intakeAngle; needs to be implemented
-    //private Servo intakeClaw; needs to be implemented
+    private Servo outtakeClaw;
+    private final double OUTTAKE_CLAW_OPEN_POSITION = 0;
+    private final double OUTTAKE_CLAW_CLOSED_POSITION = 0;
+
+
+    private Servo intakeAngle;
+    private final double INTAKE_ANGLE_LOAD_POSITION = 0;
+    private final double INTAKE_ANGLE_DROP_POSITION = 0;
+
+    private Servo intakeClaw;
+    private final double INTAKE_CLAW_OPEN_POSITION = 0;
+    private final double INTAKE_CLAW_CLOSED_POSITION = 0;
 
     //private Servo intakeSlide1; needs to be implemented
     //private Servo intakeSlide2; needs to be implemented
 
-     private DcMotor elevator1;
-     private DcMotor elevator2;
+    private DcMotor elevator1;
+    private DcMotor elevator2;
 
     private IMU imu;
 
@@ -69,7 +80,7 @@ public class AutoRobot {
             y = signum(y);
         }
 
-   //     Vector2D toGo = new Vector2D(x, y);
+        //     Vector2D toGo = new Vector2D(x, y);
         if (direction > 180) {
             direction -= 360;
         }
@@ -120,24 +131,24 @@ public class AutoRobot {
 
             if (currentTime < totalTime) {
                 timeAlotted = (totalTime - currentTime) / ((double) (time));
-         //       toGo.setVector(x, y);
-         //       toGo.adjustAngle(currentYaw);
+                //       toGo.setVector(x, y);
+                //       toGo.adjustAngle(currentYaw);
                 moveSpeed = .3 * sin(PI * (timeAlotted));
-         //       toGo.scaleVector(moveSpeed);
+                //       toGo.scaleVector(moveSpeed);
             } else {
-           //     toGo.scaleVector(0);
+                //     toGo.scaleVector(0);
             }
 
-           // frontRightDrive.setPower(toGo.getJ() - toGo.getI() - rX); //double check these values
-           // frontLeftDrive.setPower(toGo.getJ() + toGo.getI() + rX);
-           // backLeftDrive.setPower(toGo.getJ() - toGo.getI() + rX);
-           // backRightDrive.setPower(toGo.getJ() + toGo.getI() - rX);
+            // frontRightDrive.setPower(toGo.getJ() - toGo.getI() - rX); //double check these values
+            // frontLeftDrive.setPower(toGo.getJ() + toGo.getI() + rX);
+            // backLeftDrive.setPower(toGo.getJ() - toGo.getI() + rX);
+            // backRightDrive.setPower(toGo.getJ() + toGo.getI() - rX);
 
 
-      //      telemetry.addData("toGoI", toGo.getI());
-      //      telemetry.addData("toGoJ", toGo.getJ());
-      //      telemetry.addData("toGoAngle", toGo.getAngle());
-      //      telemetry.addData("target", direction);
+            //      telemetry.addData("toGoI", toGo.getI());
+            //      telemetry.addData("toGoJ", toGo.getJ());
+            //      telemetry.addData("toGoAngle", toGo.getAngle());
+            //      telemetry.addData("target", direction);
             telemetry.addData("current", currentYaw);
             telemetry.addData("power", rX);
             telemetry.addData("moveSpeed", moveSpeed);
@@ -1129,11 +1140,11 @@ public class AutoRobot {
         backLeftDrive.setDirection(DcMotor.Direction.FORWARD);
         backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        // outtakeAngle = hardwareMap.get(Servo.class, "outtakeAngle");
-        //outtakeClaw = hardwareMap.get(Servo.class, "outtakeClaw");
-
-        //intakeAngle = hardwareMap.get(Servo.class, "intakeAngle");
-        //intakeClaw = hardwareMap.get(Servo.class, "intakeClaw");
+        outtakeAngle = hardwareMap.get(Servo.class, "outtakeAngle");
+        outtakeClaw = hardwareMap.get(Servo.class, "outtakeClaw");
+        outtakeAngle.setPosition(OUTTAKE_ANGLE_DOWN_POSITION);
+        intakeAngle = hardwareMap.get(Servo.class, "intakeAngle");
+        intakeClaw = hardwareMap.get(Servo.class, "intakeClaw");
 
         //intakeSlide1 = hardwareMap.get(Servo.class, "intakeSlide1");
         //intakeSlide2 = hardwareMap.get(Servo.class, "intakeSlide2");

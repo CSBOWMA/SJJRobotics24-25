@@ -23,6 +23,8 @@ public class RobotFullRelative extends LinearOpMode {
         DcMotor frontLeftDrive = null;
         DcMotor backLeftDrive = null;
 
+        DcMotor odom = null;
+
         frontRightDrive = hardwareMap.get(DcMotor.class, "frontRight");
         frontRightDrive.setDirection(DcMotor.Direction.REVERSE);
 
@@ -36,6 +38,9 @@ public class RobotFullRelative extends LinearOpMode {
         backLeftDrive.setDirection(DcMotor.Direction.FORWARD);
 
 
+        odom = hardwareMap.get(DcMotor.class, "straight");
+        odom.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        odom.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         waitForStart();
         // run until the end of the match (driver presses STOP)
@@ -55,6 +60,10 @@ public class RobotFullRelative extends LinearOpMode {
             frontRightDrive.setPower(speed - strafe - turn);
             backLeftDrive.setPower(speed - strafe + turn);
             backRightDrive.setPower(speed + strafe - turn);
+
+
+            telemetry.addData("ticks", odom.getCurrentPosition());
+            telemetry.update();
         }
     }
 }

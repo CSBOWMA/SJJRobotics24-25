@@ -16,21 +16,22 @@ public class AutoRobot {
     private DcMotor backLeftDrive;
 
     private Servo outtakeAngle;
-    private final double OUTTAKE_ANGLE_DROP_POSITION = 0;
-    private final double OUTTAKE_ANGLE_LOAD_POSITION = 0;
+    private final double OUTTAKE_ANGLE_DROP_POSITION = .589+.03;
+    private final double OUTTAKE_ANGLE_LOAD_POSITION = .441+0.028;
+    private final double OUTTAKE_ANGLE_READY_LOAD_POSITION = .443+0.028;
 
     private Servo outtakeClaw;
-    private final double OUTTAKE_CLAW_OPEN_POSITION = 0;
-    private final double OUTTAKE_CLAW_CLOSED_POSITION = 0;
+    private final double OUTTAKE_CLAW_OPEN_POSITION = 0.2;
+    private final double OUTTAKE_CLAW_CLOSED_POSITION = 0.34;
 
 
     private Servo intakeAngle;
-    private final double INTAKE_ANGLE_LOAD_POSITION = 0;
-    private final double INTAKE_ANGLE_GRAB_POSITION = 0;
+    private final double INTAKE_ANGLE_LOAD_POSITION = .75;
+    private final double INTAKE_ANGLE_GRAB_POSITION = .06;
 
     private Servo intakeClaw;
-    private final double INTAKE_CLAW_OPEN_POSITION = 0;
-    private final double INTAKE_CLAW_CLOSED_POSITION = 0;
+    private final double INTAKE_CLAW_OPEN_POSITION = .0;
+    private final double INTAKE_CLAW_CLOSED_POSITION = 0.052;
 
     //private Servo intakeSlide1; needs to be implemented
     //private Servo intakeSlide2; needs to be implemented
@@ -38,13 +39,18 @@ public class AutoRobot {
     private DcMotor elevator1;
     private DcMotor elevator2;
 
+    private DcMotor forwardOdometry;
+
     private IMU imu;
 
 
     private static final double WHEEL_DIAMETER = 48; // In milimeters
     private static final double TICKS_PER_REVOLUTION = 1120;
 
-    private static final int TICKS_PER_INCH = 45;
+    //private static final int TICKS_PER_INCH = 45;
+
+    private static final int TICKS_PER_INCH = 337;
+
 
 
     Telemetry telemetry;
@@ -165,6 +171,237 @@ public class AutoRobot {
     }
 
     //drives forward for a certain amount of inches
+
+    public void driveForwardsInchesIMU(double inches) {
+        driveForwardsInchesIMU(inches, 1);
+    }
+
+    public void driveForwardsInchesIMU(double inches, double powerMultiplier) {
+        final int DEFAULTMOVEMENTCURVE = MovementCurves.EXPEASEOUT;
+        driveForwardsInchesIMU(inches, powerMultiplier, DEFAULTMOVEMENTCURVE);
+    }
+
+    public void driveForwardsInchesIMU(double inches, double powerMultiplier, int movementCurve) {
+
+
+        final double ADJUSTVALUE = .01;
+        final double LOWTHRESHOLD = .25;
+        forwardOdometry.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        forwardOdometry.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+
+        int traveledDistance = 0;
+        final double TARGETFACING = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES)+180;
+
+        final double TOTALDISTANCE = inches*TICKS_PER_INCH;
+        double percentTraveled;
+
+        double power;
+        double leftAdjust;
+        double rightAdjust;
+
+        while (traveledDistance < TOTALDISTANCE) {
+
+            percentTraveled = ((double)traveledDistance)/TOTALDISTANCE;
+
+            switch (movementCurve) {
+
+                case MovementCurves.CONSTANT:
+                    power = 1;
+                    break;
+                case MovementCurves.LINEAR:
+                    power = MovementCurves.linear(percentTraveled);
+                    break;
+                case MovementCurves.SIN:
+                    power = MovementCurves.sinCurve(percentTraveled);
+                    break;
+                case MovementCurves.CIRCLE:
+                    power = MovementCurves.circleCurve(percentTraveled);
+                    break;
+                case MovementCurves.QUADRATIC:
+                    //feels smooth
+                    power = MovementCurves.quadraticCurve(percentTraveled);
+                    break;
+                case MovementCurves.ROUNDEDSQUARE:
+                    power = MovementCurves.roundedSquareCurve(percentTraveled);
+                    break;
+                case MovementCurves.PARAMETRIC:
+                    power = MovementCurves.parametricCurve(percentTraveled);
+                    break;
+                case MovementCurves.NORMAL:
+                    power = MovementCurves.normalCurve(percentTraveled);
+                    break;
+                case MovementCurves.EXPEASEIN:
+                    power = MovementCurves.exponentialEaseIn(percentTraveled);
+                    break;
+                case MovementCurves.EXPEASEOUT:
+                    power = MovementCurves.exponentialEaseOut(percentTraveled);
+                    break;
+                default:
+                    power = MovementCurves.linear(percentTraveled);
+
+            }
+
+            power *= powerMultiplier;
+
+            if(TARGETFACING - imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES) > 20 || TARGETFACING - imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES) < -20) {
+                leftAdjust = 0;
+                rightAdjust = 0;
+            } else if (TARGETFACING < imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES)) {
+                leftAdjust = ADJUSTVALUE;
+                rightAdjust = 0;
+            } else if (TARGETFACING > imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES)) {
+                rightAdjust = ADJUSTVALUE;
+                leftAdjust = 0;
+            } else {
+                leftAdjust = 0;
+                rightAdjust = 0;
+            }
+
+
+
+            if (TOTALDISTANCE-traveledDistance < 2*TICKS_PER_INCH) {
+                power = .1;
+                leftAdjust = 0;
+                rightAdjust = 0;
+            } else if (TOTALDISTANCE-traveledDistance < 6*TICKS_PER_INCH){
+                power = .2;
+            } else if (power < LOWTHRESHOLD) {
+                power = LOWTHRESHOLD;
+            }
+
+            //assign power to wheels
+            frontRightDrive.setPower(power - rightAdjust);
+            frontLeftDrive.setPower(power - leftAdjust);
+            backLeftDrive.setPower(power - leftAdjust);
+            backRightDrive.setPower(power - rightAdjust);
+
+            traveledDistance = forwardOdometry.getCurrentPosition();
+        }
+
+        frontRightDrive.setPower(0);
+        frontLeftDrive.setPower(0);
+        backLeftDrive.setPower(0);
+        backRightDrive.setPower(0);
+    }
+
+
+    public void driveBackwardsInchesIMU(double inches) {
+        driveBackwardsInchesIMU(inches, 1);
+    }
+
+    public void driveBackwardsInchesIMU(double inches, double powerMultiplier) {
+        final int DEFAULTMOVEMENTCURVE = MovementCurves.EXPEASEOUT;
+        driveBackwardsInchesIMU(inches, powerMultiplier, DEFAULTMOVEMENTCURVE);
+    }
+
+    public void driveBackwardsInchesIMU(double inches, double powerMultiplier, int movementCurve) {
+
+
+        final double ADJUSTVALUE = .01;
+        final double LOWTHRESHOLD = .25;
+        forwardOdometry.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        forwardOdometry.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+
+        int traveledDistance = 0;
+        final double TARGETFACING = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES)+180;
+
+        final double TOTALDISTANCE = inches*TICKS_PER_INCH;
+        double percentTraveled;
+
+        double power;
+        double leftAdjust;
+        double rightAdjust;
+
+        while (traveledDistance < TOTALDISTANCE) {
+
+            percentTraveled = ((double)traveledDistance)/TOTALDISTANCE;
+
+            switch (movementCurve) {
+
+                case MovementCurves.CONSTANT:
+                    power = 1;
+                    break;
+                case MovementCurves.LINEAR:
+                    power = MovementCurves.linear(percentTraveled);
+                    break;
+                case MovementCurves.SIN:
+                    power = MovementCurves.sinCurve(percentTraveled);
+                    break;
+                case MovementCurves.CIRCLE:
+                    power = MovementCurves.circleCurve(percentTraveled);
+                    break;
+                case MovementCurves.QUADRATIC:
+                    //feels smooth
+                    power = MovementCurves.quadraticCurve(percentTraveled);
+                    break;
+                case MovementCurves.ROUNDEDSQUARE:
+                    power = MovementCurves.roundedSquareCurve(percentTraveled);
+                    break;
+                case MovementCurves.PARAMETRIC:
+                    power = MovementCurves.parametricCurve(percentTraveled);
+                    break;
+                case MovementCurves.NORMAL:
+                    power = MovementCurves.normalCurve(percentTraveled);
+                    break;
+                case MovementCurves.EXPEASEIN:
+                    power = MovementCurves.exponentialEaseIn(percentTraveled);
+                    break;
+                case MovementCurves.EXPEASEOUT:
+                    power = MovementCurves.exponentialEaseOut(percentTraveled);
+                    break;
+                default:
+                    power = MovementCurves.linear(percentTraveled);
+
+            }
+
+            power *= powerMultiplier;
+
+            if(TARGETFACING - imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES) > 20 || TARGETFACING - imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES) < -20) {
+                leftAdjust = 0;
+                rightAdjust = 0;
+            } else if (TARGETFACING > imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES)) {
+                leftAdjust = ADJUSTVALUE;
+                rightAdjust = 0;
+            } else if (TARGETFACING < imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES)) {
+                rightAdjust = ADJUSTVALUE;
+                leftAdjust = 0;
+            } else {
+                leftAdjust = 0;
+                rightAdjust = 0;
+            }
+
+
+
+            if (TOTALDISTANCE-traveledDistance < 2*TICKS_PER_INCH) {
+                power = .1;
+                leftAdjust = 0;
+                rightAdjust = 0;
+            } else if (TOTALDISTANCE-traveledDistance < 6*TICKS_PER_INCH){
+                power = .2;
+            } else if (power < LOWTHRESHOLD) {
+                power = LOWTHRESHOLD;
+            }
+
+            //assign power to wheels
+            frontRightDrive.setPower(-power + rightAdjust);
+            frontLeftDrive.setPower(-power + leftAdjust);
+            backLeftDrive.setPower(-power + leftAdjust);
+            backRightDrive.setPower(-power + rightAdjust);
+
+            traveledDistance = -forwardOdometry.getCurrentPosition();
+        }
+
+        frontRightDrive.setPower(0);
+        frontLeftDrive.setPower(0);
+        backLeftDrive.setPower(0);
+        backRightDrive.setPower(0);
+    }
+
+
+
+
 
     public void driveForwardsInches(double inches) {
         driveForwardsInches(inches, 1);
@@ -1093,7 +1330,7 @@ public class AutoRobot {
     }
 
     public void intakeClawClose() {
-        intakeClaw.setPosition(INTAKE_CLAW_OPEN_POSITION);
+        intakeClaw.setPosition(INTAKE_CLAW_CLOSED_POSITION);
     }
 
     public void intakeAngleGrab() {
@@ -1112,6 +1349,10 @@ public class AutoRobot {
         outtakeClaw.setPosition(OUTTAKE_CLAW_CLOSED_POSITION);
     }
 
+    public void outtakeClawReady() {
+        outtakeClaw.setPosition(OUTTAKE_ANGLE_READY_LOAD_POSITION);
+    }
+
     public void outtakeAngleLoad() {
         outtakeAngle.setPosition(OUTTAKE_ANGLE_LOAD_POSITION);
     }
@@ -1120,20 +1361,22 @@ public class AutoRobot {
         outtakeAngle.setPosition(OUTTAKE_ANGLE_DROP_POSITION);
     }
 
-    public void grabAndLoad() {
+    public void grabAndLoadSample() {
         elevatorLoadPosition();
         outtakeAngleLoad();
         intakeClawClose();
         waitSeconds(.2);
         intakeAngleLoad();
+        waitSeconds(.5);
         elevatorBottom();
-        waitSeconds(.1);
+        waitSeconds(.5);
         outtakeClawClose();
         waitSeconds(.2);
         intakeClawOpen();
-        waitSeconds(.1);
+        waitSeconds(.2);
         elevatorTop();
         outtakeAngleDrop();
+        intakeClawOpen();
     }
 
     public void dropSampleAndReset() {
@@ -1141,8 +1384,8 @@ public class AutoRobot {
         waitSeconds(.2);
         outtakeAngleLoad();
         elevatorLoadPosition();
-        intakeClawOpen();
         intakeAngleGrab();
+        intakeClawOpen();
     }
 
 
@@ -1182,28 +1425,31 @@ public class AutoRobot {
 
     public AutoRobot(HardwareMap hardwareMap, Telemetry telemetry) {
         // Initialize the hardware devices
-        frontRightDrive = hardwareMap.get(DcMotor.class, "frontRight");
-        frontRightDrive.setDirection(DcMotor.Direction.REVERSE);
+        frontRightDrive = hardwareMap.get(DcMotor.class, "frontright");
+        frontRightDrive.setDirection(DcMotor.Direction.FORWARD);
         frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        backRightDrive = hardwareMap.get(DcMotor.class, "backRight");
+        backRightDrive = hardwareMap.get(DcMotor.class, "backright");
         backRightDrive.setDirection(DcMotor.Direction.REVERSE);
         backRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        frontLeftDrive = hardwareMap.get(DcMotor.class, "frontLeft");
-        frontLeftDrive.setDirection(DcMotor.Direction.FORWARD);
+        frontLeftDrive = hardwareMap.get(DcMotor.class, "frontleft");
+        frontLeftDrive.setDirection(DcMotor.Direction.REVERSE);
         frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        backLeftDrive = hardwareMap.get(DcMotor.class, "backLeft");
-        backLeftDrive.setDirection(DcMotor.Direction.FORWARD);
+        backLeftDrive = hardwareMap.get(DcMotor.class, "backleft");
+        backLeftDrive.setDirection(DcMotor.Direction.REVERSE);
         backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         outtakeAngle = hardwareMap.get(Servo.class, "outtakeAngle");
         outtakeClaw = hardwareMap.get(Servo.class, "outtakeClaw");
-        outtakeAngle.setPosition(OUTTAKE_ANGLE_DROP_POSITION);
+        outtakeAngle.setPosition(OUTTAKE_ANGLE_LOAD_POSITION);
+        outtakeClaw.setPosition(OUTTAKE_CLAW_CLOSED_POSITION);
         intakeAngle = hardwareMap.get(Servo.class, "intakeAngle");
+        intakeAngle.setPosition(INTAKE_ANGLE_LOAD_POSITION);
         intakeClaw = hardwareMap.get(Servo.class, "intakeClaw");
 
+        intakeClaw.setPosition(INTAKE_CLAW_OPEN_POSITION);
         //intakeSlide1 = hardwareMap.get(Servo.class, "intakeSlide1");
         //intakeSlide2 = hardwareMap.get(Servo.class, "intakeSlide2");
 
@@ -1226,10 +1472,10 @@ public class AutoRobot {
         imu.resetYaw();
 
 
+        forwardOdometry = hardwareMap.get(DcMotor.class, "straight");
+
         this.telemetry = telemetry;
 
     }
-
-
 
 }

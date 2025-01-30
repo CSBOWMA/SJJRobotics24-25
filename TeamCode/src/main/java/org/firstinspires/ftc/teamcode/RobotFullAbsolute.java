@@ -39,7 +39,7 @@ public class RobotFullAbsolute extends LinearOpMode {
         DcMotor frontRightDrive = null;
         DcMotor frontLeftDrive = null;
         DcMotor backLeftDrive = null;
-
+        DcMotor odom = null;
 
         frontRightDrive = hardwareMap.get(DcMotor.class, "frontright");
         frontRightDrive.setDirection(DcMotor.Direction.FORWARD);
@@ -52,7 +52,9 @@ public class RobotFullAbsolute extends LinearOpMode {
 
         backLeftDrive = hardwareMap.get(DcMotor.class, "backleft");
         backLeftDrive.setDirection(DcMotor.Direction.REVERSE);
-
+        odom = hardwareMap.get(DcMotor.class, "straight");
+        odom.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        odom.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
 
         //   frontRightDrive = hardwareMap.get(DcMotor.class, "frontRight");
@@ -116,7 +118,7 @@ public class RobotFullAbsolute extends LinearOpMode {
             backLeftDrive.setPower(speed - strafe + turn);
             backRightDrive.setPower(speed + strafe - turn);
 
-
+            telemetry.addData("ticks", odom.getCurrentPosition());
             //the rest of the code goes here
 
         }

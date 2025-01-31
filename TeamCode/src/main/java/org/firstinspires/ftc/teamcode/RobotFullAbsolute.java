@@ -95,13 +95,23 @@ public class RobotFullAbsolute extends LinearOpMode {
         intakeAngle = hardwareMap.get(Servo.class, "intakeAngle");
         intakeAngle.setPosition(INTAKE_ANGLE_LOAD_POSITION);
         intakeClaw = hardwareMap.get(Servo.class, "intakeClaw");
-
         intakeClaw.setPosition(INTAKE_CLAW_OPEN_POSITION);
 
 
+        Servo slide1;
+        Servo slide2;
 
+        double slide1Speed;
+        double slide2Speed;
+
+        final double SLIDE_ONE_FAR_POSITION;
+        final double SLIDE_ONE_CLOSE_POSITION;
+
+        final double SLIDE_TWO_FAR_POSITION;
+        final double SLIDE_TWO_CLOSE_POSITION;
         DcMotor elevator1;
         DcMotor elevator2;
+
 
 
         elevator1 = hardwareMap.get(DcMotor.class, "elavator1");
@@ -171,6 +181,9 @@ public class RobotFullAbsolute extends LinearOpMode {
             difference = Math.toDegrees(currentFacing-direction.getRadians());
 
 
+            slide1Speed = gamepad2.left_stick_y*.1;
+            slide2Speed = gamepad2.left_stick_y*.1;
+
             if (difference > 180) {
                 difference -= 360;
             }
@@ -200,6 +213,10 @@ public class RobotFullAbsolute extends LinearOpMode {
             switch (currentMode) {
                 case SEARCHMODE:
 
+                    frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+                    backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+                    frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+                    frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
                     if (intakePivot.getPosition() > INTAKE_PIVOT_HIGH_TURN_POSITION - .02) {
                         positiveRotate = false;
                     }
@@ -233,11 +250,23 @@ public class RobotFullAbsolute extends LinearOpMode {
                     intakeClaw.setPosition(INTAKE_CLAW_OPEN_POSITION);
                     intakeAngle.setPosition(INTAKE_ANGLE_SEARCH_POSITION);
 
+                    frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+                    backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+                    frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+                    frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
                     break;
                 case GRABMODE:
                     speed = 0;
                     strafe = 0;
                     turn = 0;
+                    slide1Speed = 0;
+                    slide2Speed = 0;
+
+                    frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                    backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                    frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                    frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
                     intakeAngle.setPosition(INTAKE_ANGLE_GRAB_POSITION);
 
                     if(intakeAngle.getPosition() > INTAKE_ANGLE_GRAB_POSITION - .02
@@ -263,6 +292,10 @@ public class RobotFullAbsolute extends LinearOpMode {
                     break;
                 case PASSMODE:
 
+                    frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+                    backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+                    frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+                    frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
                     intakeAngle.setPosition(INTAKE_ANGLE_LOAD_POSITION);
                    if(!(intakeAngle.getPosition() < INTAKE_ANGLE_LOAD_POSITION + .02
                     && intakeAngle.getPosition() > INTAKE_ANGLE_LOAD_POSITION - .02)) {
@@ -290,6 +323,10 @@ public class RobotFullAbsolute extends LinearOpMode {
                     outtakeAngle.setPosition(OUTTAKE_ANGLE_DROP_POSITION);
                     outtakeClaw.setPosition(OUTTAKE_CLAW_CLOSED_POSITION);
 
+                    frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+                    backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+                    frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+                    frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
                     if (elevator1.getCurrentPosition() > HIGH_ELEVATOR_POSITION-50
                     && elevator2.getCurrentPosition() > HIGH_ELEVATOR_POSITION-50) {
                         currentMode = READYDROPMODE;
@@ -298,6 +335,10 @@ public class RobotFullAbsolute extends LinearOpMode {
                     break;
                 case READYDROPMODE:
 
+                    frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+                    backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+                    frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+                    frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
                     if (gamepad1.b) {
                         currentMode = DROPMODE;
                     } else {
@@ -314,6 +355,11 @@ public class RobotFullAbsolute extends LinearOpMode {
 
                 case DROPMODE:
                     outtakeClaw.setPosition(OUTTAKE_CLAW_OPEN_POSITION);
+
+                    frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                    backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                    frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                    frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
                     speed = 0;
                     strafe = 0;
                     turn = 0;
@@ -323,6 +369,10 @@ public class RobotFullAbsolute extends LinearOpMode {
                     }
                 default:
 
+                    frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+                    backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+                    frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+                    frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
                     intakePivot.setPosition(INTAKE_PIVOT_PASS_POSITION);
                     intakeClaw.setPosition(INTAKE_CLAW_OPEN_POSITION);
                     intakeAngle.setPosition(INTAKE_ANGLE_LOAD_POSITION);

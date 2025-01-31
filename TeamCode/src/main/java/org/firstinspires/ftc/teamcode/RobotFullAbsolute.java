@@ -106,9 +106,11 @@ public class RobotFullAbsolute extends LinearOpMode {
 
         final double SLIDE_ONE_FAR_POSITION;
         final double SLIDE_ONE_CLOSE_POSITION;
+        final double SLIDE_ONE_PASS_POSITION;
 
         final double SLIDE_TWO_FAR_POSITION;
         final double SLIDE_TWO_CLOSE_POSITION;
+        final double SLIDE_TWO_PASS_POSITION;
         DcMotor elevator1;
         DcMotor elevator2;
 
@@ -184,6 +186,18 @@ public class RobotFullAbsolute extends LinearOpMode {
             slide1Speed = gamepad2.left_stick_y*.1;
             slide2Speed = gamepad2.left_stick_y*.1;
 
+
+            if(slide1.getPosition() > SLIDE_ONE_FAR_POSITION - .01 || slide2.getPosition() > SLIDE_TWO_FAR_POSITION-.01
+                    && slide1Speed > 0) {
+                slide1Speed = 0;
+            }
+
+            if(slide1.getPosition() > SLIDE_ONE_PASS_POSITION + .01 || slide2.getPosition() > SLIDE_TWO_PASS_POSITION+.01
+                    && slide1Speed < 0) {
+                slide1Speed = 0;
+            }
+
+
             if (difference > 180) {
                 difference -= 360;
             }
@@ -213,6 +227,8 @@ public class RobotFullAbsolute extends LinearOpMode {
             switch (currentMode) {
                 case SEARCHMODE:
 
+                    slide1.setPosition(slide1.getPosition()+slide1Speed);
+                    slide2.setPosition(slide2.getPosition()+slide2Speed);
                     frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
                     backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
                     frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
@@ -291,6 +307,8 @@ public class RobotFullAbsolute extends LinearOpMode {
                     outtakeClaw.setPosition(OUTTAKE_CLAW_OPEN_POSITION);
                     break;
                 case PASSMODE:
+                   slide1.setPosition(SLIDE_ONE_PASS_POSITION);
+                   slide2.setPosition(SLIDE_TWO_PASS_POSITION);
 
                     frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
                     backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
@@ -305,12 +323,16 @@ public class RobotFullAbsolute extends LinearOpMode {
                        elevator2.setTargetPosition(LOW_ELEVATOR_POSITION);
                        elevator1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                        elevator2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                   } else if (outtakeClaw.getPosition() < OUTTAKE_CLAW_CLOSED_POSITION + .02
-                   && outtakeClaw.getPosition() > OUTTAKE_CLAW_CLOSED_POSITION - .02){
-                       outtakeClaw.setPosition(OUTTAKE_CLAW_OPEN_POSITION);
-                   } else if (intakeClaw.getPosition() < INTAKE_CLAW_OPEN_POSITION + .02
-                   && intakeClaw.getPosition() > INTAKE_CLAW_OPEN_POSITION - .02){
-                       currentMode = ELEVATORMODE;
+                   } else if (!(outtakeClaw.getPosition() < OUTTAKE_CLAW_CLOSED_POSITION + .02
+                   && outtakeClaw.getPosition() > OUTTAKE_CLAW_CLOSED_POSITION - .02) &&
+                   slide1.getPosition() < SLIDE_ONE_PASS_POSITION + .02 && slide1.getPosition() > SLIDE_ONE_PASS_POSITION - .02
+                   && slide2.getPosition() < SLIDE_TWO_PASS_POSITION + .02 && slide2.getPosition() > SLIDE_ONE_PASS_POSITION -.02){
+                       outtakeClaw.setPosition(OUTTAKE_CLAW_CLOSED_POSITION);
+                   } else if (!(intakeClaw.getPosition() < INTAKE_CLAW_OPEN_POSITION + .02
+                   && intakeClaw.getPosition() > INTAKE_CLAW_OPEN_POSITION - .02)){
+                       intakeClaw.setPosition(INTAKE_CLAW_OPEN_POSITION);
+                   } else {
+                      currentMode = ELEVATORMODE;
                    }
 
                     break;
@@ -382,8 +404,12 @@ public class RobotFullAbsolute extends LinearOpMode {
                     elevator2.setTargetPosition(LOW_ELEVATOR_POSITION);
                     elevator1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                     elevator2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
+                    slide1.setPosition(SLIDE_ONE_PASS_POSITION);
+                    slide2.setPosition(SLIDE_TWO_PASS_POSITION);
             }
+
+
+
 
 
             frontLeftDrive.setPower(speed + strafe + turn);

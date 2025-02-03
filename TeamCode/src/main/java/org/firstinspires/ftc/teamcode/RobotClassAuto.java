@@ -23,6 +23,8 @@ public class RobotClassAuto extends LinearOpMode /*implements BasicRobot*/ {
         //yaw will be incorrect, this handles that
         telemetry.addData("Status", "Running");
         telemetry.update();
+        robot.driveLeftInchesIMU(12);
+        robot.driveRightInchesIMU(6);
         robot.dropSampleAndReset();
         robot.waitSeconds(1);
         robot.grabAndLoadSample();

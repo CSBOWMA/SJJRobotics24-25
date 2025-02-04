@@ -108,7 +108,7 @@ public class RobotFullAbsolute extends LinearOpMode {
         outtakeClaw.setPosition(OUTTAKE_CLAW_CLOSED_POSITION);
         timer = System.nanoTime();
 
-        while(timer + 1_000_000_000 > System.nanoTime());
+        while(timer + 2_000_000_000 > System.nanoTime());
 
         intakeAngle1 = hardwareMap.get(Servo.class, "intakeAngle");
         intakeAngle1.setPosition(INTAKE_ONE_ANGLE_LOAD_POSITION);
@@ -141,6 +141,8 @@ public class RobotFullAbsolute extends LinearOpMode {
         slide1.setPosition(SLIDE_ONE_PASS_POSITION);
         slide2.setPosition(SLIDE_TWO_PASS_POSITION);
 
+        double slide1Pos = SLIDE_ONE_PASS_POSITION;
+        double slide2Pos = SLIDE_TWO_PASS_POSITION;
         DcMotor elevator1;
         DcMotor elevator2;
 
@@ -224,18 +226,18 @@ public class RobotFullAbsolute extends LinearOpMode {
           //  difference = Math.toDegrees(currentFacing-direction.getRadians());
 
 
-            slide1Speed = gamepad2.left_stick_y*.05;
-            slide2Speed = gamepad2.left_stick_y*-.05;
+            slide1Speed = gamepad2.left_stick_y*.01;
+            slide2Speed = gamepad2.left_stick_y*-.01;
 
 
-            if(slide1.getPosition() > SLIDE_ONE_FAR_POSITION - .01 || slide2.getPosition() > SLIDE_TWO_FAR_POSITION-.01
-                    && slide1Speed > 0) {
+            if(slide1Pos > SLIDE_ONE_FAR_POSITION && slide1Speed > 0) {
                 slide1Speed = 0;
+                slide2Speed = 0;
             }
 
-            if(slide1.getPosition() > SLIDE_ONE_PASS_POSITION + .01 || slide2.getPosition() > SLIDE_TWO_PASS_POSITION+.01
-                    && slide1Speed < 0) {
+            if(slide1.getPosition() < SLIDE_ONE_PASS_POSITION && slide1Speed < 0) {
                 slide1Speed = 0;
+                slide2Speed = 0;
             }
 
 
@@ -283,8 +285,12 @@ public class RobotFullAbsolute extends LinearOpMode {
                     speed *= .3;
                     strafe *= .3;
                     turn *= .3;
-                    slide1.setPosition(slide1.getPosition()+slide1Speed);
-                    slide2.setPosition(slide2.getPosition()+slide2Speed);
+                    slide1Speed *= .3;
+                    slide2Speed *= .3;
+                    slide1Pos += slide1Speed;
+                    slide2Pos += slide2Speed;
+                    slide1.setPosition(slide1Pos);
+                    slide2.setPosition(slide2Pos);
                     frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
                     backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
                     frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);

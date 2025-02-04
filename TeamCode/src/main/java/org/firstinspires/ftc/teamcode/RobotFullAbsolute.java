@@ -66,11 +66,13 @@ public class RobotFullAbsolute extends LinearOpMode {
 
 
         Servo outtakeAngle;
-        final double OUTTAKE_ANGLE_DROP_POSITION = 0.589+.03;
+        final double OUTTAKE_ANGLE_DROP_POSITION = 0.59;
+        final double OUTTAKE_ANGLE_PREDROP_POSITION = 0.64;
         final double OUTTAKE_ANGLE_LOAD_POSITION = .441+.04;
 
         Servo outtakeClaw;
         final double OUTTAKE_CLAW_OPEN_POSITION = 0.2;
+        final double OUTTAKE_CLAW_PREDROP_POSITION = .3;
         final double OUTTAKE_CLAW_CLOSED_POSITION = 0.34;
 
 
@@ -79,16 +81,16 @@ public class RobotFullAbsolute extends LinearOpMode {
         Servo intakeAngle2;
         intakeAngle2 = hardwareMap.get(Servo.class, "intakeAngle2");
 
-        final double INTAKE_ONE_ANGLE_SEARCH_POSITION = 0.06;
-        final double INTAKE_ONE_ANGLE_LOAD_POSITION = .7;
-        final double INTAKE_ONE_ANGLE_GRAB_POSITION = .0;
+        final double INTAKE_ONE_ANGLE_SEARCH_POSITION = 0.07;
+        final double INTAKE_ONE_ANGLE_LOAD_POSITION = .73;
+        final double INTAKE_ONE_ANGLE_GRAB_POSITION = .04;
 
-        final double INTAKE_TWO_ANGLE_SEARCH_POSITION = 0.67;
-        final double INTAKE_TWO_ANGLE_LOAD_POSITION = .0;
-        final double INTAKE_TWO_ANGLE_GRAB_POSITION = .75;
+        final double INTAKE_TWO_ANGLE_SEARCH_POSITION = 0.68;
+        final double INTAKE_TWO_ANGLE_LOAD_POSITION = .02;
+        final double INTAKE_TWO_ANGLE_GRAB_POSITION = .71;
         Servo intakeClaw;
         final double INTAKE_CLAW_OPEN_POSITION = .0;
-        final double INTAKE_CLAW_CLOSED_POSITION = .13;
+        final double INTAKE_CLAW_CLOSED_POSITION = .158;
 
         Servo intakePivot;
         final double INTAKE_PIVOT_HIGH_TURN_POSITION = .553;
@@ -122,23 +124,22 @@ public class RobotFullAbsolute extends LinearOpMode {
 
         slide1 = hardwareMap.get(Servo.class, "intakeSlide1");
         slide2 = hardwareMap.get(Servo.class, "intakeSlide2");
-
         double slide1Speed;
         double slide2Speed;
 
         final double SLIDE_ONE_FAR_POSITION = .35;
         final double SLIDE_ONE_CLOSE_POSITION = 0;
         final double SLIDE_ONE_PREPASS_POSITION = .12;
-        final double SLIDE_ONE_PASS_POSITION = 0;
+        final double SLIDE_ONE_PASS_POSITION = .04;
 
         final double SLIDE_TWO_FAR_POSITION = .65;
         final double SLIDE_TWO_CLOSE_POSITION = 1;
         final double SLIDE_TWO_PREPASS_POSITION = .88;
-        final double SLIDE_TWO_PASS_POSITION = 1;
+        final double SLIDE_TWO_PASS_POSITION = .96;
 
 
-        slide1.setPosition(SLIDE_ONE_PREPASS_POSITION);
-        slide2.setPosition(SLIDE_TWO_PREPASS_POSITION);
+        slide1.setPosition(SLIDE_ONE_PASS_POSITION);
+        slide2.setPosition(SLIDE_TWO_PASS_POSITION);
 
         DcMotor elevator1;
         DcMotor elevator2;
@@ -164,7 +165,7 @@ public class RobotFullAbsolute extends LinearOpMode {
         frontSensor = hardwareMap.get(RevColorSensorV3.class, "c1");
         backSensor = hardwareMap.get(RevColorSensorV3.class, "c2");
 
-        final int COLORTHRESHOLD = 20;
+        final int COLORTHRESHOLD = 120;
         boolean XPressed = false;
 
         int currentMode = 0;
@@ -203,21 +204,24 @@ public class RobotFullAbsolute extends LinearOpMode {
             currentTimeSeconds = currentTime/1_000_000_000.0;
             currentFacing = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
 
-            toGo.setVector(gamepad1.left_stick_y, -gamepad1.left_stick_x);
+            speed = -gamepad1.left_stick_y;
+            strafe = gamepad1.left_stick_x;
+            turn = gamepad1.right_stick_x;
+          //  toGo.setVector(gamepad1.left_stick_y, -gamepad1.left_stick_x);
 
-            toGo.setRelative(currentFacing);
+          //  toGo.setRelative(currentFacing);
 
-            speed = toGo.getI() * TOTALSPEED;
-            speed = gamepad1.dpad_up ? speed+SLOWSPEED : speed;
-            speed = gamepad1.dpad_down ? speed-SLOWSPEED : speed;
+          //  speed = toGo.getI() * TOTALSPEED;
+          //  speed = gamepad1.dpad_up ? speed+SLOWSPEED : speed;
+          //  speed = gamepad1.dpad_down ? speed-SLOWSPEED : speed;
 
-            strafe = toGo.getJ() * TOTALSPEED;
-            strafe = gamepad1.dpad_right ? strafe+SLOWSPEED : strafe;
-            strafe = gamepad1.dpad_left ? strafe-SLOWSPEED : strafe;
+          //  strafe = toGo.getJ() * TOTALSPEED;
+          //  strafe = gamepad1.dpad_right ? strafe+SLOWSPEED : strafe;
+          //  strafe = gamepad1.dpad_left ? strafe-SLOWSPEED : strafe;
 
-            direction.setVector(-gamepad1.right_stick_y, gamepad1.right_stick_x);
+          //  direction.setVector(-gamepad1.right_stick_y, gamepad1.right_stick_x);
 
-            difference = Math.toDegrees(currentFacing-direction.getRadians());
+          //  difference = Math.toDegrees(currentFacing-direction.getRadians());
 
 
             slide1Speed = gamepad2.left_stick_y*.05;
@@ -235,29 +239,31 @@ public class RobotFullAbsolute extends LinearOpMode {
             }
 
 
-            if (difference > 180) {
-                difference -= 360;
+          //  if (difference > 180) {
+          //      difference -= 360;
+          //  }
+
+          //  if (difference < -180) {
+          //      difference += 360;
+          //  }
+
+         //   if (difference > 5 && difference < 180) {
+         //       turn = MovementCurves.circleCurve(difference/360);
+         //   } else if (difference < -5 && difference > -180) {
+
+         //       turn = -MovementCurves.circleCurve(-difference/360);
+
+         //   } else {
+         //       turn = 0;
+         //   }
+
+           // turn *= direction.getMagnitude();
+
+            if (gamepad1.triangle && currentMode != READYDROPMODE) {
+                currentMode = DEFAULTMODE;
             }
 
-            if (difference < -180) {
-                difference += 360;
-            }
-
-            if (difference > 5 && difference < 180) {
-                turn = MovementCurves.circleCurve(difference/360);
-            } else if (difference < -5 && difference > -180) {
-
-                turn = -MovementCurves.circleCurve(-difference/360);
-
-            } else {
-                turn = 0;
-            }
-
-            turn *= direction.getMagnitude();
-
-
-
-            if (gamepad1.a) {
+            if (gamepad1.a && currentMode != READYDROPMODE) {
                 currentMode = SEARCHMODE;
                 timer = currentTime;
                 timerSeconds = currentTimeSeconds;
@@ -273,6 +279,10 @@ public class RobotFullAbsolute extends LinearOpMode {
 
             switch (currentMode) {
                 case SEARCHMODE:
+
+                    speed *= .3;
+                    strafe *= .3;
+                    turn *= .3;
                     slide1.setPosition(slide1.getPosition()+slide1Speed);
                     slide2.setPosition(slide2.getPosition()+slide2Speed);
                     frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
@@ -294,8 +304,8 @@ public class RobotFullAbsolute extends LinearOpMode {
                     }
 
 
-                    intakePivot.setPosition(INTAKE_PIVOT_LOW_TURN_POSITION+
-                            (MovementCurves.linear(((double)(currentTime%2_000_000_000))/2_000_000_000.0)*(INTAKE_PIVOT_POSITION_DIFFERENCE)));
+                    intakePivot.setPosition(INTAKE_PIVOT_LOW_TURN_POSITION - .02+
+                            (MovementCurves.linear(((double)(currentTime%1_500_000_000))/1_500_000_000.0)*(INTAKE_PIVOT_POSITION_DIFFERENCE+.02)));
                     telemetry.addData("SWITCH", (currentTimeSeconds*2)%5);
 
                     elevator1.setTargetPosition(LOW_ELEVATOR_POSITION);
@@ -329,16 +339,16 @@ public class RobotFullAbsolute extends LinearOpMode {
                     intakeAngle2.setPosition(INTAKE_TWO_ANGLE_GRAB_POSITION);
 
 
-                    if(timerSeconds + 5 < currentTimeSeconds) {
+                    if(timerSeconds + .25 < currentTimeSeconds) {
                         intakeClaw.setPosition(INTAKE_CLAW_CLOSED_POSITION);
                     }
 
-                    if (timerSeconds + 10 < currentTimeSeconds && (frontSensor.red() > COLORTHRESHOLD && backSensor.red() > COLORTHRESHOLD
+                    if (timerSeconds + .5 < currentTimeSeconds && (frontSensor.red() > COLORTHRESHOLD && backSensor.red() > COLORTHRESHOLD
                             || frontSensor.green() > COLORTHRESHOLD && backSensor.green() > COLORTHRESHOLD)) {
                         currentMode = PASSMODE;
                         timer = currentTime;
                         timerSeconds = currentTimeSeconds;
-                    } else if (timerSeconds + 10 < currentTimeSeconds) {
+                    } else if (timerSeconds + .5 < currentTimeSeconds) {
                         currentMode = SEARCHMODE;
                     }
 
@@ -360,31 +370,30 @@ public class RobotFullAbsolute extends LinearOpMode {
                     intakeAngle1.setPosition(INTAKE_ONE_ANGLE_LOAD_POSITION);
                     intakeAngle2.setPosition(INTAKE_TWO_ANGLE_LOAD_POSITION);
                     intakePivot.setPosition(INTAKE_PIVOT_PASS_POSITION);
-                    slide1.setPosition(SLIDE_ONE_PREPASS_POSITION);
-                    slide2.setPosition(SLIDE_TWO_PREPASS_POSITION);
 
 
-                    if (timerSeconds + 15 < currentTimeSeconds) {
+                    if (timerSeconds + 4 < currentTimeSeconds) {
                         currentMode = ELEVATORMODE;
                         timer = currentTime;
+                        timerSeconds = currentTimeSeconds;
                     }
 
-                    else if (timerSeconds + 10 < currentTimeSeconds) {
+                    else if (timerSeconds + 3 < currentTimeSeconds) {
                         intakeClaw.setPosition(INTAKE_CLAW_OPEN_POSITION);
 
-                    } else if (timerSeconds + 7 < currentTimeSeconds) {
+                    } else if (timerSeconds + 2 < currentTimeSeconds) {
 
+                        slide1.setPosition(SLIDE_ONE_PASS_POSITION);
+                        slide2.setPosition(SLIDE_TWO_PASS_POSITION);
+                        outtakeClaw.setPosition(OUTTAKE_CLAW_CLOSED_POSITION);
+                    } else if (timerSeconds + 1.5 < currentTimeSeconds) {
+
+                        slide1.setPosition(SLIDE_ONE_PASS_POSITION);
+                        slide2.setPosition(SLIDE_TWO_PASS_POSITION);
+
+                    } else if(timerSeconds + 1 < currentTimeSeconds) {
                         slide1.setPosition(SLIDE_ONE_PREPASS_POSITION);
                         slide2.setPosition(SLIDE_TWO_PREPASS_POSITION);
-                        outtakeClaw.setPosition(OUTTAKE_CLAW_CLOSED_POSITION);
-                    } else if (timerSeconds + 5 < currentTimeSeconds) {
-
-                        slide1.setPosition(SLIDE_ONE_PASS_POSITION);
-                        slide2.setPosition(SLIDE_TWO_PASS_POSITION);
-
-                    } else if(timerSeconds + 4 < currentTimeSeconds) {
-                        slide1.setPosition(SLIDE_ONE_PASS_POSITION);
-                        slide2.setPosition(SLIDE_TWO_PASS_POSITION);
                         outtakeAngle.setPosition(OUTTAKE_ANGLE_LOAD_POSITION);
                         outtakeClaw.setPosition(OUTTAKE_CLAW_OPEN_POSITION);
                         elevator1.setTargetPosition(LOW_ELEVATOR_POSITION);
@@ -392,6 +401,9 @@ public class RobotFullAbsolute extends LinearOpMode {
                         elevator1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                         elevator2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
+                    } else {
+                        slide1.setPosition(SLIDE_ONE_PREPASS_POSITION);
+                        slide2.setPosition(SLIDE_TWO_PREPASS_POSITION);
                     }
                     break;
                 case ELEVATORMODE:
@@ -403,13 +415,19 @@ public class RobotFullAbsolute extends LinearOpMode {
                     elevator2.setPower(1);
                     elevator1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                     elevator2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                    outtakeAngle.setPosition(OUTTAKE_ANGLE_DROP_POSITION);
+                    outtakeAngle.setPosition(OUTTAKE_ANGLE_PREDROP_POSITION);
                     outtakeClaw.setPosition(OUTTAKE_CLAW_CLOSED_POSITION);
 
                     frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
                     backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
                     frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
                     frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+                    if (timerSeconds + 1 < currentTimeSeconds) {
+                        outtakeClaw.setPosition(OUTTAKE_CLAW_PREDROP_POSITION);
+                    } else {
+                        outtakeClaw.setPosition(OUTTAKE_CLAW_CLOSED_POSITION);
+                    }
+
                     if (elevator1.getCurrentPosition() > HIGH_ELEVATOR_POSITION-50
                             && elevator2.getCurrentPosition() > HIGH_ELEVATOR_POSITION-50) {
                         currentMode = READYDROPMODE;
@@ -430,6 +448,7 @@ public class RobotFullAbsolute extends LinearOpMode {
 
                         intakeAngle1.setPosition(INTAKE_ONE_ANGLE_LOAD_POSITION);
                         intakeAngle2.setPosition(INTAKE_TWO_ANGLE_LOAD_POSITION);
+
                         elevator1.setTargetPosition(HIGH_ELEVATOR_POSITION);
                         elevator2.setTargetPosition(HIGH_ELEVATOR_POSITION);
                         elevator1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -449,9 +468,10 @@ public class RobotFullAbsolute extends LinearOpMode {
                     speed = 0;
                     strafe = 0;
                     turn = 0;
-                    if (timerSeconds + 3 < currentTimeSeconds) {
+                    if (timerSeconds + .5 < currentTimeSeconds) {
                         currentMode = DEFAULTMODE;
                     }
+                    break;
                 default:
 
                     frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
@@ -463,7 +483,7 @@ public class RobotFullAbsolute extends LinearOpMode {
                     intakeAngle1.setPosition(INTAKE_ONE_ANGLE_LOAD_POSITION);
                     intakeAngle2.setPosition(INTAKE_TWO_ANGLE_LOAD_POSITION);
                     outtakeAngle.setPosition(OUTTAKE_ANGLE_LOAD_POSITION);
-                    outtakeClaw.setPosition(OUTTAKE_CLAW_CLOSED_POSITION);
+                    outtakeClaw.setPosition(OUTTAKE_CLAW_OPEN_POSITION);
                     elevator1.setTargetPosition(LOW_ELEVATOR_POSITION);
                     elevator2.setTargetPosition(LOW_ELEVATOR_POSITION);
                     elevator1.setMode(DcMotor.RunMode.RUN_TO_POSITION);

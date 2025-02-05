@@ -283,8 +283,8 @@ public class RobotRedSpecimen extends LinearOpMode {
                         intakeClaw.setPosition(INTAKE_CLAW_CLOSED_POSITION);
                     }
 
-                    if (timerSeconds + .5 < currentTimeSeconds && (frontSensor.red() > COLORTHRESHOLD && backSensor.red() > COLORTHRESHOLD
-                            || frontSensor.green() > COLORTHRESHOLD && backSensor.green() > COLORTHRESHOLD)) {
+                    if ((timerSeconds + .5 < currentTimeSeconds && (frontSensor.red() > COLORTHRESHOLD && backSensor.red() > COLORTHRESHOLD
+                            || frontSensor.green() > COLORTHRESHOLD && backSensor.green() > COLORTHRESHOLD))|| gamepad2.right_bumper) {
                         currentMode = PASSMODE;
                         timer = currentTime;
                         timerSeconds = currentTimeSeconds;

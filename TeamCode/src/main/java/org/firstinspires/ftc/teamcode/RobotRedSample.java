@@ -166,18 +166,6 @@ public class RobotRedSample extends LinearOpMode {
         long currentTime;
         double currentTimeSeconds;
 
-        //   frontRightDrive = hardwareMap.get(DcMotor.class, "frontRight");
-        //   frontRightDrive.setDirection(DcMotor.Direction.REVERSE);
-
-        //   backRightDrive = hardwareMap.get(DcMotor.class, "backRight");
-        //   backRightDrive.setDirection(DcMotor.Direction.REVERSE);
-
-        //   frontLeftDrive = hardwareMap.get(DcMotor.class, "frontLeft");
-        //   frontLeftDrive.setDirection(DcMotor.Direction.FORWARD);
-
-        //   backLeftDrive = hardwareMap.get(DcMotor.class, "backLeft");
-        //   backLeftDrive.setDirection(DcMotor.Direction.FORWARD);
-
         outtakeAngle.setPosition(OUTTAKE_ANGLE_DROP_POSITION);
         outtakeClaw.setPosition(OUTTAKE_CLAW_CLOSED_POSITION);
         timer = System.nanoTime();
@@ -189,8 +177,6 @@ public class RobotRedSample extends LinearOpMode {
         intakeClaw.setPosition(INTAKE_CLAW_CLOSED_POSITION);
         outtakeAngle.setPosition(OUTTAKE_ANGLE_LOAD_POSITION);
         intakePivot.setPosition(INTAKE_PIVOT_PASS_POSITION);
-
-
 
         waitForStart();
         // run until the end of the match (driver presses STOP)
@@ -250,9 +236,9 @@ public class RobotRedSample extends LinearOpMode {
                     frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
 
-                    if ((frontSensor.red() > COLORTHRESHOLD && backSensor.red() > COLORTHRESHOLD
+                    if (((frontSensor.red() > COLORTHRESHOLD && backSensor.red() > COLORTHRESHOLD
                             || frontSensor.green() > COLORTHRESHOLD && backSensor.green() > COLORTHRESHOLD)
-                            && timerSeconds + 1 < currentTimeSeconds || gamepad2.square) {
+                            && timerSeconds + 1 < currentTimeSeconds) || gamepad2.square) {
                         intakePivot.setPosition(intakePivot.getPosition());
                         intakeAngle1.setPosition(INTAKE_ONE_ANGLE_GRAB_POSITION);
 

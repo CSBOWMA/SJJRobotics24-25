@@ -101,20 +101,13 @@ public class RobotRedSample extends LinearOpMode {
 
         outtakeAngle = hardwareMap.get(Servo.class, "outtakeAngle");
         outtakeClaw = hardwareMap.get(Servo.class, "outtakeClaw");
-        outtakeAngle.setPosition(OUTTAKE_ANGLE_DROP_POSITION);
-        outtakeClaw.setPosition(OUTTAKE_CLAW_CLOSED_POSITION);
-        timer = System.nanoTime();
+//        timer = System.nanoTime();
 
-        while(timer + 2_000_000_000 > System.nanoTime());
+//        while(timer + 2_000_000_000 > System.nanoTime());
 
         intakeAngle1 = hardwareMap.get(Servo.class, "intakeAngle");
-        intakeAngle1.setPosition(INTAKE_ONE_ANGLE_LOAD_POSITION);
         intakeAngle2 = hardwareMap.get(Servo.class, "intakeAngle2");
-        intakeAngle2.setPosition(INTAKE_TWO_ANGLE_LOAD_POSITION);
         intakeClaw = hardwareMap.get(Servo.class, "intakeClaw");
-        intakeClaw.setPosition(INTAKE_CLAW_OPEN_POSITION);
-
-        outtakeAngle.setPosition((OUTTAKE_ANGLE_LOAD_POSITION));
 
         Servo slide1;
         Servo slide2;
@@ -134,16 +127,10 @@ public class RobotRedSample extends LinearOpMode {
         final double SLIDE_TWO_PREPASS_POSITION = .88;
         final double SLIDE_TWO_PASS_POSITION = .96;
 
-
-        slide1.setPosition(SLIDE_ONE_PASS_POSITION);
-        slide2.setPosition(SLIDE_TWO_PASS_POSITION);
-
         double slide1Pos = SLIDE_ONE_PASS_POSITION;
         double slide2Pos = SLIDE_TWO_PASS_POSITION;
         DcMotor elevator1;
         DcMotor elevator2;
-
-
 
         elevator1 = hardwareMap.get(DcMotor.class, "elavator1");
         elevator1.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -179,8 +166,6 @@ public class RobotRedSample extends LinearOpMode {
         long currentTime;
         double currentTimeSeconds;
 
-
-
         //   frontRightDrive = hardwareMap.get(DcMotor.class, "frontRight");
         //   frontRightDrive.setDirection(DcMotor.Direction.REVERSE);
 
@@ -193,6 +178,18 @@ public class RobotRedSample extends LinearOpMode {
         //   backLeftDrive = hardwareMap.get(DcMotor.class, "backLeft");
         //   backLeftDrive.setDirection(DcMotor.Direction.FORWARD);
 
+        outtakeAngle.setPosition(OUTTAKE_ANGLE_DROP_POSITION);
+        outtakeClaw.setPosition(OUTTAKE_CLAW_CLOSED_POSITION);
+        timer = System.nanoTime();
+        slide1.setPosition(SLIDE_ONE_PASS_POSITION);
+        slide2.setPosition(SLIDE_TWO_PASS_POSITION);
+        while(timer + 1_000_000_000 > System.nanoTime());
+        intakeAngle1.setPosition(INTAKE_ONE_ANGLE_LOAD_POSITION);
+        intakeAngle2.setPosition(INTAKE_TWO_ANGLE_LOAD_POSITION);
+        intakeClaw.setPosition(INTAKE_CLAW_CLOSED_POSITION);
+        outtakeAngle.setPosition(OUTTAKE_ANGLE_LOAD_POSITION);
+        intakePivot.setPosition(INTAKE_PIVOT_PASS_POSITION);
+
 
 
         waitForStart();
@@ -203,66 +200,15 @@ public class RobotRedSample extends LinearOpMode {
             currentTimeSeconds = currentTime/1_000_000_000.0;
             currentFacing = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
 
-            speed = -gamepad1.left_stick_y;
-            strafe = gamepad1.left_stick_x;
-            turn = gamepad1.right_stick_x;
-          //  toGo.setVector(gamepad1.left_stick_y, -gamepad1.left_stick_x);
+            speed = -gamepad1.left_stick_y*0.8;
+            strafe = gamepad1.left_stick_x*0.8;
+            turn = gamepad1.right_stick_x*0.8;
 
-          //  toGo.setRelative(currentFacing);
-
-          //  speed = toGo.getI() * TOTALSPEED;
-          //  speed = gamepad1.dpad_up ? speed+SLOWSPEED : speed;
-          //  speed = gamepad1.dpad_down ? speed-SLOWSPEED : speed;
-
-          //  strafe = toGo.getJ() * TOTALSPEED;
-          //  strafe = gamepad1.dpad_right ? strafe+SLOWSPEED : strafe;
-          //  strafe = gamepad1.dpad_left ? strafe-SLOWSPEED : strafe;
-
-          //  direction.setVector(-gamepad1.right_stick_y, gamepad1.right_stick_x);
-
-          //  difference = Math.toDegrees(currentFacing-direction.getRadians());
-
-
-            slide1Speed = gamepad2.left_stick_y*.01;
-            slide2Speed = gamepad2.left_stick_y*-.01;
-
-
-            if(slide1Pos > SLIDE_ONE_FAR_POSITION && slide1Speed > 0) {
-                slide1Speed = 0;
-                slide2Speed = 0;
-            }
-
-            if(slide1.getPosition() < SLIDE_ONE_PASS_POSITION && slide1Speed < 0) {
-                slide1Speed = 0;
-                slide2Speed = 0;
-            }
-
-
-          //  if (difference > 180) {
-          //      difference -= 360;
-          //  }
-
-          //  if (difference < -180) {
-          //      difference += 360;
-          //  }
-
-         //   if (difference > 5 && difference < 180) {
-         //       turn = MovementCurves.circleCurve(difference/360);
-         //   } else if (difference < -5 && difference > -180) {
-
-         //       turn = -MovementCurves.circleCurve(-difference/360);
-
-         //   } else {
-         //       turn = 0;
-         //   }
-
-           // turn *= direction.getMagnitude();
-
-            if (gamepad1.triangle && currentMode != READYDROPMODE) {
+            if (gamepad2.triangle && currentMode != READYDROPMODE) {
                 currentMode = DEFAULTMODE;
             }
 
-            if (gamepad1.a && currentMode != READYDROPMODE) {
+            if (gamepad2.a && currentMode != READYDROPMODE) {
                 currentMode = SEARCHMODE;
                 timer = currentTime;
                 timerSeconds = currentTimeSeconds;
@@ -282,12 +228,22 @@ public class RobotRedSample extends LinearOpMode {
                     speed *= .3;
                     strafe *= .3;
                     turn *= .3;
-                    slide1Speed *= .3;
-                    slide2Speed *= .3;
-                    slide1Pos += slide1Speed;
-                    slide2Pos += slide2Speed;
-                    slide1.setPosition(slide1Pos);
-                    slide2.setPosition(slide2Pos);
+
+                    if (gamepad2.right_trigger > 0.2) {
+                        slide1.setPosition(slide1.getPosition() - 0.0075);//.decrease();
+                        slide2.setPosition(slide2.getPosition() + 0.0075);//.increase();
+                    }
+                    if (gamepad2.left_trigger > 0.2) {
+                        slide1.setPosition(slide1.getPosition() + 0.0075);//.increase();
+                        slide2.setPosition(slide2.getPosition() - 0.0075);//.decrease();
+                    }
+
+//                    slide1Speed *= .3;
+//                    slide2Speed *= .3;
+//                    slide1Pos += slide1Speed;
+//                    slide2Pos += slide2Speed;
+//                    slide1.setPosition(slide1Pos);
+//                    slide2.setPosition(slide2Pos);
                     frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
                     backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
                     frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
@@ -296,7 +252,7 @@ public class RobotRedSample extends LinearOpMode {
 
                     if ((frontSensor.red() > COLORTHRESHOLD && backSensor.red() > COLORTHRESHOLD
                             || frontSensor.green() > COLORTHRESHOLD && backSensor.green() > COLORTHRESHOLD)
-                            && timerSeconds + 1 < currentTimeSeconds) {
+                            && timerSeconds + 1 < currentTimeSeconds || gamepad2.square) {
                         intakePivot.setPosition(intakePivot.getPosition());
                         intakeAngle1.setPosition(INTAKE_ONE_ANGLE_GRAB_POSITION);
 
@@ -330,9 +286,9 @@ public class RobotRedSample extends LinearOpMode {
                     speed = 0;
                     strafe = 0;
                     turn = 0;
-                    slide1Speed = 0;
-                    slide2Speed = 0;
-
+//                    slide1Speed = 0;
+//                    slide2Speed = 0;
+//
                     frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
                     backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
                     frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -351,9 +307,9 @@ public class RobotRedSample extends LinearOpMode {
                         currentMode = PASSMODE;
                         timer = currentTime;
                         timerSeconds = currentTimeSeconds;
-                    }// else if (timerSeconds + .5 < currentTimeSeconds) {
-                     //   currentMode = SEARCHMODE;
-                    //}
+                    } else if (timerSeconds + .5 < currentTimeSeconds) {
+                        currentMode = SEARCHMODE;
+                    }
 
                     elevator1.setTargetPosition(LOW_ELEVATOR_POSITION);
                     elevator2.setTargetPosition(LOW_ELEVATOR_POSITION);
@@ -443,7 +399,7 @@ public class RobotRedSample extends LinearOpMode {
                     backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
                     frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
                     frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-                    if (gamepad1.b) {
+                    if (gamepad2.circle) {
                         currentMode = DROPMODE;
                         timer = currentTime;
                         timerSeconds = currentTimeSeconds;

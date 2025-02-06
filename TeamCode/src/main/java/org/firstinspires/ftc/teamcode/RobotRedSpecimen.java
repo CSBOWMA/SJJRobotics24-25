@@ -140,8 +140,8 @@ public class RobotRedSpecimen extends LinearOpMode {
         elevator2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         final int LOW_ELEVATOR_POSITION = 0;
-        final int HIGH_ELEVATOR_POSITION = 1500;
-        final int ELEVATOR_HANG_POSITION = 1400;
+        final int HIGH_ELEVATOR_POSITION = 1350;
+        final int ELEVATOR_HANG_POSITION = 1250;
 
         RevColorSensorV3 frontSensor;
         RevColorSensorV3 backSensor;
@@ -389,7 +389,7 @@ public class RobotRedSpecimen extends LinearOpMode {
                         elevator2.setTargetPosition(HIGH_ELEVATOR_POSITION);
                         elevator1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                         elevator2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                        outtakeAngle.setPosition(OUTTAKE_ANGLE_DROP_POSITION);
+                        outtakeAngle.setPosition(OUTTAKE_ANGLE_PREDROP_POSITION);
                         outtakeClaw.setPosition(OUTTAKE_CLAW_CLOSED_POSITION);
                     }
                     break;

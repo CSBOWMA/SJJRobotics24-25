@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.*;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.libraries.vector.Vector2D;
 import org.firstinspires.ftc.teamcode.libraries.MovementCurves.MovementCurves;
 
@@ -64,7 +65,8 @@ public class RobotRedSpecimen extends LinearOpMode {
 
         Servo outtakeAngle;
         final double OUTTAKE_ANGLE_DROP_POSITION = 0.59;
-        final double OUTTAKE_ANGLE_PREDROP_POSITION = 0.64;
+        final double OUTTAKE_ANGLE_PREDROP_POSITION = 0.60;
+        final double OUTTAKE_ANGLE_POSTDROP_POSITION = 0.7;
         final double OUTTAKE_ANGLE_LOAD_POSITION = .441+.04;
 
         Servo outtakeClaw;
@@ -94,6 +96,7 @@ public class RobotRedSpecimen extends LinearOpMode {
         final double INTAKE_PIVOT_LOW_TURN_POSITION = .49;
         final double INTAKE_PIVOT_POSITION_DIFFERENCE = INTAKE_PIVOT_HIGH_TURN_POSITION-INTAKE_PIVOT_LOW_TURN_POSITION;
         final double INTAKE_PIVOT_PASS_POSITION = 0.49;
+        final long INTAKE_PIVOT_TIME = 2_100_000_000;
         boolean positiveRotate = true;
         intakePivot = hardwareMap.get(Servo.class, "intakeRotate");
         //private Servo intakeSlide1; needs to be implemented
@@ -140,8 +143,7 @@ public class RobotRedSpecimen extends LinearOpMode {
         elevator2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         final int LOW_ELEVATOR_POSITION = 0;
-        final int HIGH_ELEVATOR_POSITION = 1350;
-        final int ELEVATOR_HANG_POSITION = 1250;
+        final int HIGH_ELEVATOR_POSITION = 1450;
 
         RevColorSensorV3 frontSensor;
         RevColorSensorV3 backSensor;
@@ -149,18 +151,20 @@ public class RobotRedSpecimen extends LinearOpMode {
         frontSensor = hardwareMap.get(RevColorSensorV3.class, "c1");
         backSensor = hardwareMap.get(RevColorSensorV3.class, "c2");
 
-        final int COLORTHRESHOLD = 120;
+        final int FRONTDISTANCETHRESHOLD = 40;
+        final int BACKDISTANCETHRESHOLD = 35;
         boolean XPressed = false;
 
         int currentMode = 0;
         final int DEFAULTMODE = 0;
         final int SEARCHMODE = 1;
-        final int GRABMODE = 2;
-        final int PASSMODE = 3;
-        final int ELEVATORMODE = 4;
-        final int READYHANGMODE = 5;
-        final int HANGMODE = 6;
-        final int POSTHANGMODE = 7;
+        final int PREPLACEMODE = 2;
+        final int GRABMODE = 3;
+        final int PASSMODE = 4;
+        final int ELEVATORMODE = 5;
+        final int READYHANGMODE = 6;
+        final int HANGMODE = 7;
+        final int POSTHANGMODE = 8;
 
         long currentTime;
         double currentTimeSeconds;
@@ -193,7 +197,11 @@ public class RobotRedSpecimen extends LinearOpMode {
             if (gamepad2.triangle && currentMode != READYHANGMODE) {
                 currentMode = DEFAULTMODE;
             }
-
+            if (gamepad2.square && currentMode != READYHANGMODE) {
+                currentMode = PREPLACEMODE;
+                timer = currentTime;
+                timerSeconds = currentTimeSeconds;
+            }
             if (gamepad2.a && currentMode != READYHANGMODE) {
                 currentMode = SEARCHMODE;
                 timer = currentTime;
@@ -201,14 +209,16 @@ public class RobotRedSpecimen extends LinearOpMode {
             }
 
             telemetry.addData("currentMode", currentMode);
-            telemetry.addData("sens1R", frontSensor.red());
-            telemetry.addData("sens2R", backSensor.red());
+            telemetry.addData("sens1D", frontSensor.getDistance(DistanceUnit.MM));
+            telemetry.addData("sens2D", backSensor.getDistance(DistanceUnit.MM));
             telemetry.addData("currentSeconds", currentTimeSeconds);
             telemetry.addData("seconds", timerSeconds);
 
             telemetry.update();
 
             switch (currentMode) {
+
+
                 case SEARCHMODE:
 
                     speed *= .3;
@@ -231,9 +241,8 @@ public class RobotRedSpecimen extends LinearOpMode {
                     frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
 
-                    if (((frontSensor.red() > COLORTHRESHOLD && backSensor.red() > COLORTHRESHOLD
-                            || frontSensor.green() > COLORTHRESHOLD && backSensor.green() > COLORTHRESHOLD)
-                            && timerSeconds + 1 < currentTimeSeconds) || gamepad2.square) {
+                    if (frontSensor.getDistance(DistanceUnit.MM) < FRONTDISTANCETHRESHOLD
+                            && backSensor.getDistance(DistanceUnit.MM) < BACKDISTANCETHRESHOLD) {
                         intakePivot.setPosition(intakePivot.getPosition());
                         intakeAngle1.setPosition(INTAKE_ONE_ANGLE_GRAB_POSITION);
 
@@ -244,8 +253,59 @@ public class RobotRedSpecimen extends LinearOpMode {
                     }
 
 
-                    intakePivot.setPosition(INTAKE_PIVOT_LOW_TURN_POSITION - .02+
-                            (MovementCurves.linear(((double)(currentTime%1_500_000_000))/1_500_000_000.0)*(INTAKE_PIVOT_POSITION_DIFFERENCE+.02)));
+                    intakePivot.setPosition(INTAKE_PIVOT_LOW_TURN_POSITION - .05+
+                            (MovementCurves.linear(((double)(currentTime%2_500_000_000L))/2_500_000_000.0)*(INTAKE_PIVOT_POSITION_DIFFERENCE+.05)));
+                    telemetry.addData("SWITCH", (currentTimeSeconds*2)%5);
+
+                    elevator1.setTargetPosition(LOW_ELEVATOR_POSITION);
+                    elevator2.setTargetPosition(LOW_ELEVATOR_POSITION);
+                    elevator1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                    elevator2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                    outtakeAngle.setPosition(OUTTAKE_ANGLE_LOAD_POSITION);
+                    outtakeClaw.setPosition(OUTTAKE_CLAW_OPEN_POSITION);
+                    intakeClaw.setPosition(INTAKE_CLAW_OPEN_POSITION);
+                    intakeAngle1.setPosition(INTAKE_ONE_ANGLE_SEARCH_POSITION);
+                    intakeAngle2.setPosition(INTAKE_TWO_ANGLE_SEARCH_POSITION);
+
+                    frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+                    backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+                    frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+                    frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+                    break;
+                case PREPLACEMODE:
+
+                    speed *= .3;
+                    strafe *= .3;
+                    turn *= .3;
+
+                    if (gamepad2.right_trigger > 0.2) {
+                        slide1.setPosition(slide1.getPosition() - 0.0075);//.decrease();
+                        slide2.setPosition(slide2.getPosition() + 0.0075);//.increase();
+                    }
+                    if (gamepad2.left_trigger > 0.2) {
+                        slide1.setPosition(slide1.getPosition() + 0.0075);//.increase();
+                        slide2.setPosition(slide2.getPosition() - 0.0075);//.decrease();
+                    }
+
+
+                    frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+                    backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+                    frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+                    frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+
+
+                    if (frontSensor.getDistance(DistanceUnit.MM) < FRONTDISTANCETHRESHOLD
+                            && backSensor.getDistance(DistanceUnit.MM) < BACKDISTANCETHRESHOLD) {
+                        intakePivot.setPosition(intakePivot.getPosition());
+                        intakeAngle1.setPosition(INTAKE_ONE_ANGLE_GRAB_POSITION);
+
+                        intakeAngle2.setPosition(INTAKE_TWO_ANGLE_GRAB_POSITION);
+                        currentMode = GRABMODE;
+                        timer = currentTime;
+                        timerSeconds = currentTimeSeconds;
+                    }
+
+                    intakePivot.setPosition(INTAKE_PIVOT_PASS_POSITION);
                     telemetry.addData("SWITCH", (currentTimeSeconds*2)%5);
 
                     elevator1.setTargetPosition(LOW_ELEVATOR_POSITION);
@@ -267,8 +327,6 @@ public class RobotRedSpecimen extends LinearOpMode {
                     speed = 0;
                     strafe = 0;
                     turn = 0;
-                    slide1Speed = 0;
-                    slide2Speed = 0;
 
                     frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
                     backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -283,8 +341,7 @@ public class RobotRedSpecimen extends LinearOpMode {
                         intakeClaw.setPosition(INTAKE_CLAW_CLOSED_POSITION);
                     }
 
-                    if ((timerSeconds + .5 < currentTimeSeconds && (frontSensor.red() > COLORTHRESHOLD && backSensor.red() > COLORTHRESHOLD
-                            || frontSensor.green() > COLORTHRESHOLD && backSensor.green() > COLORTHRESHOLD))|| gamepad2.right_bumper) {
+                    if (timerSeconds + .5 < currentTimeSeconds) {
                         currentMode = PASSMODE;
                         timer = currentTime;
                         timerSeconds = currentTimeSeconds;
@@ -390,32 +447,30 @@ public class RobotRedSpecimen extends LinearOpMode {
                         elevator1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                         elevator2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                         outtakeAngle.setPosition(OUTTAKE_ANGLE_PREDROP_POSITION);
-                        outtakeClaw.setPosition(OUTTAKE_CLAW_CLOSED_POSITION);
+                        outtakeClaw.setPosition(OUTTAKE_CLAW_PREDROP_POSITION);
                     }
                     break;
 
                 case HANGMODE:
 
-
-                    elevator1.setTargetPosition(ELEVATOR_HANG_POSITION);
-                    elevator2.setTargetPosition(ELEVATOR_HANG_POSITION);
-                    elevator1.setPower(1);
-                    elevator2.setPower(1);
-                    elevator1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                    elevator2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                    frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                    speed *= .3;
+                    strafe *= .3;
+                    turn *= .3;
+                   frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
                     backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
                     frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
                     frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
                     speed = 0;
                     strafe = 0;
                     turn = 0;
-                    if (timerSeconds + 1 < currentTimeSeconds) {
-                        currentMode = POSTHANGMODE;
-                        timerSeconds = currentTimeSeconds;
-                    } else if (timerSeconds + .5 < currentTimeSeconds) {
-                        outtakeClaw.setPosition(OUTTAKE_CLAW_OPEN_POSITION);
-                    }
+                    currentMode = POSTHANGMODE;
+                    timerSeconds = currentTimeSeconds;
+               //     if (timerSeconds + 1 < currentTimeSeconds) {
+               //         currentMode = POSTHANGMODE;
+               //         timerSeconds = currentTimeSeconds;
+               //     } else if (timerSeconds + .5 < currentTimeSeconds) {
+               //         outtakeClaw.setPosition(OUTTAKE_CLAW_OPEN_POSITION);
+               //     }
                     break;
 
                 case POSTHANGMODE:
@@ -428,12 +483,12 @@ public class RobotRedSpecimen extends LinearOpMode {
                     intakeClaw.setPosition(INTAKE_CLAW_OPEN_POSITION);
                     intakeAngle1.setPosition(INTAKE_ONE_ANGLE_LOAD_POSITION);
                     intakeAngle2.setPosition(INTAKE_TWO_ANGLE_LOAD_POSITION);
-                    outtakeAngle.setPosition(OUTTAKE_ANGLE_PREDROP_POSITION);
+                    outtakeAngle.setPosition(OUTTAKE_ANGLE_POSTDROP_POSITION);
                     outtakeClaw.setPosition(OUTTAKE_CLAW_OPEN_POSITION);
                     slide1.setPosition(SLIDE_ONE_PREPASS_POSITION);
                     slide2.setPosition(SLIDE_TWO_PREPASS_POSITION);
 
-                    if (timerSeconds + .5 < currentTimeSeconds) {
+                    if (timerSeconds + 3 < currentTimeSeconds) {
                         currentMode = DEFAULTMODE;
                     }
 
@@ -444,6 +499,14 @@ public class RobotRedSpecimen extends LinearOpMode {
                     backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
                     frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
                     frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+
+                    elevator1.setTargetPosition(LOW_ELEVATOR_POSITION);
+                    elevator2.setTargetPosition(LOW_ELEVATOR_POSITION);
+                    elevator1.setPower(1);
+                    elevator2.setPower(1);
+                    elevator1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                    elevator2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
                     intakePivot.setPosition(INTAKE_PIVOT_PASS_POSITION);
                     intakeClaw.setPosition(INTAKE_CLAW_OPEN_POSITION);
                     intakeAngle1.setPosition(INTAKE_ONE_ANGLE_LOAD_POSITION);

@@ -6,11 +6,8 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 
-//import org.firstinspires.ftc.teamcode.auto.BasicRobot;
-
-
 @Autonomous
-public class RobotClassAuto extends LinearOpMode /*implements BasicRobot*/ {
+public class RobotClassAuto extends LinearOpMode  {
     @Override
     public void runOpMode() throws InterruptedException {
 
@@ -23,31 +20,51 @@ public class RobotClassAuto extends LinearOpMode /*implements BasicRobot*/ {
         //yaw will be incorrect, this handles that
         telemetry.addData("Status", "Running");
         telemetry.update();
-        robot.driveLeftInchesIMU(12);
-        robot.driveRightInchesIMU(6);
-        robot.dropSampleAndReset();
-        robot.waitSeconds(1);
-        robot.grabAndLoadSample();
-        robot.driveRightSeconds(.8, .5);
+
+
+        //preload block in bucket
+        robot.elevatorTop();
+        robot.outtakeAngleDrop();
+        robot.outtakeClawClose();
+        robot.driveLeftInchesIMU(6);
+        robot.face(0);
         robot.driveBackwardsInchesIMU(12);
-        robot.waitSeconds(4);
+        robot.face(45);
         robot.dropSampleAndReset();
 
-     //   robot.waitSeconds(2);
-     //   robot.dropSampleAndReset();
-     //   robot.waitSeconds(4);
-     //   robot.grabAndLoadSample();
-     //   robot.waitSeconds(4);
-     //   robot.dropSampleAndReset();
-     //   robot.waitSeconds(4);
-     //   robot.grabAndLoadSample();
-     //   robot.waitSeconds(4);
-     //   robot.dropSampleAndReset();
-     //   robot.waitSeconds(10);
+        //proceed to go for second block
+        robot.face(90);
+        robot.waitSeconds(.2);
+        robot.driveRightInchesIMU(8.2);
+        robot.driveForwardsInchesIMU(13.2);
+        robot.grabAndLoadSample();
 
-     //   robot.driveBackwardsSeconds(.2);
-     //   robot.face(10);
-     //   robot.driveArcLeftForwards(80);
+        //after first block grab go for bucket
+        robot.driveBackwardsInchesIMU(14.1);
+        robot.driveLeftInchesIMU(9);
+        robot.waitSeconds(.5);
+        robot.face(45);
+        robot.waitSeconds(.5);
+        robot.dropSampleAndReset();
+        robot.face(90-5);
+        robot.waitSeconds(.5);
+
+        //go for second block
+        robot.driveLeftInchesIMU(2.4);
+        robot.driveForwardsInchesIMU(13.3);
+        robot.grabAndLoadSample();
+        robot.driveBackwardsInchesIMU(10);
+        robot.waitSeconds(.75);
+
+        //line up with bucket for drop
+        robot.face(45);
+        robot.driveBackwardsInchesIMU(2);
+        robot.dropSampleAndReset();
+        robot.elevatorBottom();
+        robot.waitSeconds(2);
+
+        //end of autonomous
+
 
     }
 }

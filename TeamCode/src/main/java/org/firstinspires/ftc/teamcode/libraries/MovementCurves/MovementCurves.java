@@ -21,7 +21,7 @@ public class MovementCurves {
     //follows an absolute value equation
     public static double linear(double x) {
         if(!inRange(x)) {
-            return -1;
+            return 0;
         }
         return 1-Math.abs(2*x-1);
     }
@@ -29,21 +29,21 @@ public class MovementCurves {
     //follows a sin curve from trough to trough
     public static double sinCurve(double x) {
         if(!inRange(x)) {
-            return -1;
+            return 0;
         }
         return Math.sin(2 * Math.PI*(x) - Math.PI / 2) / 2 + 0.5;
     }
     //follows the arc of a circle
     public static double circleCurve(double x) {
         if(!inRange(x)) {
-            return -1;
+            return 0;
         }
         return Math.sqrt(1 - Math.pow((1 - x), 2));
     }
     //follows a quadratic equation
     public static double quadraticCurve(double x) {
         if(!inRange(x)) {
-            return -1;
+            return 0;
         }
         return 1-4*Math.pow(x-.5, 2);
     }
@@ -51,14 +51,14 @@ public class MovementCurves {
     //then quickly drops off in speed towards each end
     public static double roundedSquareCurve(double x) {
         if(!inRange(x)) {
-            return -1;
+            return 0;
         }
         return Math.pow(1-Math.pow(1-2*x,4), 0.25);
     }
     //follows a parametric curve
     public static double parametricCurve(double x) {
         if(!inRange(x)) {
-            return -1;
+            return 0;
         }
         return -(2*Math.pow(x,2)-2*x) /
                 (2*Math.pow(2*Math.pow(x,2)-2*x+1, 2));
@@ -67,21 +67,21 @@ public class MovementCurves {
     //follows the normal distribution curve
     public static double normalCurve(double x) {
         if(!inRange(x)) {
-            return -1;
+            return 0;
         }
         return Math.pow(Math.E, -4*Math.pow(2*x-1, 2));
     }
     //follows an exponential curve, starts slow ends fast
     public static double exponentialEaseIn(double x) {
         if(!inRange(x)) {
-            return -1;
+            return 0;
         }
         return Math.pow(Math.E, 3*x-3);
     }
     //follows an exponential curve, starts fast ends slow
     public static double exponentialEaseOut(double x) {
         if(!inRange(x)) {
-            return -1;
+            return 0;
         }
         return Math.pow(2, -4*x);
     }

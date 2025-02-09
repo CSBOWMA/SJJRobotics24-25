@@ -8,8 +8,11 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.libraries.MovementCurves.MovementCurves;
 
 
+
+//Designed to handle controls for one person,
+//allowing for the other to spot or perform other actions
 @TeleOp
-public class RobotRedSample extends LinearOpMode {
+public class RobotRedSampleOne extends LinearOpMode {
 
     public void runOpMode() throws InterruptedException {
         IMU  imu = hardwareMap.get(IMU.class, "imu");
@@ -208,43 +211,43 @@ public class RobotRedSample extends LinearOpMode {
 
                 // designed to handle moving blocks around, but grab mode was designed to be manual,
                 //so it is instead utilized, left in case automatic functionality is reimplemented
-              //  case PUSHMODE:
+                //  case PUSHMODE:
 
 
-              //      speed *= .3;
-              //      strafe *= .3;
-              //      turn *= .5;
+                //      speed *= .3;
+                //      strafe *= .3;
+                //      turn *= .5;
 
-              //      if (gamepad2.right_trigger > 0.2) {
-              //          slide1.setPosition(slide1.getPosition() + 0.0025);//.decrease();
-              //          slide2.setPosition(slide2.getPosition() - 0.0025);//.increase();
-              //      }
-              //      if (gamepad2.left_trigger > 0.2) {
-              //          slide1.setPosition(slide1.getPosition() - 0.0025);//.increase();
-              //          slide2.setPosition(slide2.getPosition() + 0.0025);//.decrease();
-              //      }
-              //      frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-              //      backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-              //      frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-              //      frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                //      if (gamepad2.right_trigger > 0.2) {
+                //          slide1.setPosition(slide1.getPosition() + 0.0025);//.decrease();
+                //          slide2.setPosition(slide2.getPosition() - 0.0025);//.increase();
+                //      }
+                //      if (gamepad2.left_trigger > 0.2) {
+                //          slide1.setPosition(slide1.getPosition() - 0.0025);//.increase();
+                //          slide2.setPosition(slide2.getPosition() + 0.0025);//.decrease();
+                //      }
+                //      frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                //      backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                //      frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                //      frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-              //      intakeAngle1.setPosition(INTAKE_ONE_ANGLE_GRAB_POSITION);
-              //      intakeAngle2.setPosition(INTAKE_TWO_ANGLE_GRAB_POSITION);
+                //      intakeAngle1.setPosition(INTAKE_ONE_ANGLE_GRAB_POSITION);
+                //      intakeAngle2.setPosition(INTAKE_TWO_ANGLE_GRAB_POSITION);
 
-              //      if (!gamepad2.square) {
-              //          currentMode = SEARCHMODE;
-              //      }
+                //      if (!gamepad2.square) {
+                //          currentMode = SEARCHMODE;
+                //      }
 
-              //      elevator1.setTargetPosition(LOW_ELEVATOR_POSITION);
-              //      elevator2.setTargetPosition(LOW_ELEVATOR_POSITION);
-              //      elevator1.setPower(1);
-              //      elevator2.setPower(1);
-              //      elevator1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-              //      elevator2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-              //      outtakeAngle.setPosition(OUTTAKE_ANGLE_LOAD_POSITION);
-              //      outtakeClaw.setPosition(OUTTAKE_CLAW_OPEN_POSITION);
+                //      elevator1.setTargetPosition(LOW_ELEVATOR_POSITION);
+                //      elevator2.setTargetPosition(LOW_ELEVATOR_POSITION);
+                //      elevator1.setPower(1);
+                //      elevator2.setPower(1);
+                //      elevator1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                //      elevator2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                //      outtakeAngle.setPosition(OUTTAKE_ANGLE_LOAD_POSITION);
+                //      outtakeClaw.setPosition(OUTTAKE_CLAW_OPEN_POSITION);
 
-              //      break;
+                //      break;
 
                 //first state, front claw goes into search position, and oscillates until it finds a block
                 //then the robot lowers the claw and goes into grab mode

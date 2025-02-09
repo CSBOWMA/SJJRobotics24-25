@@ -16,8 +16,8 @@ public class AutoRobot {
     private DcMotor backLeftDrive;
 
     private Servo outtakeAngle;
-    private final double OUTTAKE_ANGLE_DROP_POSITION = .589+.03;
-    private final double OUTTAKE_ANGLE_LOAD_POSITION = .441+0.028;
+    private final double OUTTAKE_ANGLE_DROP_POSITION = .59;
+    private final double OUTTAKE_ANGLE_LOAD_POSITION = .441+0.04;
     private final double OUTTAKE_ANGLE_READY_LOAD_POSITION = .443+0.028;
 
     private Servo outtakeClaw;
@@ -25,13 +25,20 @@ public class AutoRobot {
     private final double OUTTAKE_CLAW_CLOSED_POSITION = 0.34;
 
 
-    private Servo intakeAngle;
-    private final double INTAKE_ANGLE_LOAD_POSITION = .75;
-    private final double INTAKE_ANGLE_GRAB_POSITION = .06;
+    Servo intakeAngle1;
+    Servo intakeAngle2;
+
+    final double INTAKE_ONE_ANGLE_SEARCH_POSITION = 0.07;
+    final double INTAKE_ONE_ANGLE_LOAD_POSITION = .73;
+    final double INTAKE_ONE_ANGLE_GRAB_POSITION = .04;
+
+    final double INTAKE_TWO_ANGLE_SEARCH_POSITION = 0.68;
+    final double INTAKE_TWO_ANGLE_LOAD_POSITION = .04;
+    final double INTAKE_TWO_ANGLE_GRAB_POSITION = .71;
 
     private Servo intakeClaw;
     private final double INTAKE_CLAW_OPEN_POSITION = .0;
-    private final double INTAKE_CLAW_CLOSED_POSITION = 0.15;
+    private final double INTAKE_CLAW_CLOSED_POSITION = 0.17;
 
     //private Servo intakeSlide1; needs to be implemented
     //private Servo intakeSlide2; needs to be implemented
@@ -41,6 +48,21 @@ public class AutoRobot {
 
     private DcMotor forwardOdometry;
     private DcMotor sidewaysOdometry;
+
+    private Servo slide1;
+    private Servo slide2;
+
+
+    final double SLIDE_ONE_FAR_POSITION = .35;
+    final double SLIDE_ONE_CLOSE_POSITION = 0;
+    final double SLIDE_ONE_PREPASS_POSITION = .17;
+    final double SLIDE_ONE_PASS_POSITION = .05;
+
+    final double SLIDE_TWO_FAR_POSITION = .65;
+    final double SLIDE_TWO_CLOSE_POSITION = 1;
+    final double SLIDE_TWO_PREPASS_POSITION = .83;
+    final double SLIDE_TWO_PASS_POSITION = .95;
+
 
     private IMU imu;
 
@@ -52,7 +74,8 @@ public class AutoRobot {
 
     private static final int TICKS_PER_INCH = 337;
 
-
+    private Servo intakePivot;
+    final double INTAKE_PIVOT_STRAIGHT_POSITION = .49;
 
     Telemetry telemetry;
     //private double current robotX; unable to reliably solve
@@ -412,7 +435,7 @@ public class AutoRobot {
     public void driveLeftInchesIMU(double inches, double powerMultiplier, int movementCurve) {
 
 
-        final double ADJUSTVALUE = .01;
+        final double ADJUSTVALUE = .05;
         final double LOWTHRESHOLD = .25;
         sidewaysOdometry.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         sidewaysOdometry.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -475,10 +498,10 @@ public class AutoRobot {
             if(TARGETFACING - imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES) > 20 || TARGETFACING - imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES) < -20) {
                 leftAdjust = 0;
                 rightAdjust = 0;
-            } else if (TARGETFACING < imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES)) {
+            } else if (TARGETFACING > imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES)) {
                 leftAdjust = ADJUSTVALUE;
                 rightAdjust = 0;
-            } else if (TARGETFACING > imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES)) {
+            } else if (TARGETFACING < imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES)) {
                 rightAdjust = ADJUSTVALUE;
                 leftAdjust = 0;
             } else {
@@ -489,11 +512,11 @@ public class AutoRobot {
 
 
             if (TOTALDISTANCE-traveledDistance < 2*TICKS_PER_INCH) {
-                power = .1;
+                power = .2;
                 leftAdjust = 0;
                 rightAdjust = 0;
             } else if (TOTALDISTANCE-traveledDistance < 6*TICKS_PER_INCH){
-                power = .2;
+                power = .25;
             } else if (power < LOWTHRESHOLD) {
                 power = LOWTHRESHOLD;
             }
@@ -501,10 +524,10 @@ public class AutoRobot {
             //assign power to wheels
             frontRightDrive.setPower(+power - rightAdjust);
             frontLeftDrive.setPower(-power + leftAdjust);
-            backLeftDrive.setPower(+power - rightAdjust);
-            backRightDrive.setPower(-power + leftAdjust);
+            backLeftDrive.setPower(+power - leftAdjust);
+            backRightDrive.setPower(-power + rightAdjust);
 
-            traveledDistance = -forwardOdometry.getCurrentPosition();
+            traveledDistance = sidewaysOdometry.getCurrentPosition();
         }
 
         frontRightDrive.setPower(0);
@@ -512,6 +535,8 @@ public class AutoRobot {
         backLeftDrive.setPower(0);
         backRightDrive.setPower(0);
     }
+
+
 
     public void driveRightInchesIMU(double inches) {
         driveRightInchesIMU(inches, 1);
@@ -602,11 +627,11 @@ public class AutoRobot {
 
 
             if (TOTALDISTANCE-traveledDistance < 2*TICKS_PER_INCH) {
-                power = .1;
+                power = .2;
                 leftAdjust = 0;
                 rightAdjust = 0;
             } else if (TOTALDISTANCE-traveledDistance < 6*TICKS_PER_INCH){
-                power = .2;
+                power = .3;
             } else if (power < LOWTHRESHOLD) {
                 power = LOWTHRESHOLD;
             }
@@ -617,7 +642,7 @@ public class AutoRobot {
             backLeftDrive.setPower(-power + leftAdjust);
             backRightDrive.setPower(+power - rightAdjust);
 
-            traveledDistance = forwardOdometry.getCurrentPosition();
+            traveledDistance = -sidewaysOdometry.getCurrentPosition();
         }
 
         frontRightDrive.setPower(0);
@@ -716,7 +741,7 @@ public class AutoRobot {
                 leftAdjust = 0;
                 rightAdjust = 0;
             } else if (TOTALDISTANCE-traveledDistance < 6*TICKS_PER_INCH){
-                power = .2;
+                power = .3;
             } else if (power < LOWTHRESHOLD) {
                 power = LOWTHRESHOLD;
             }
@@ -737,8 +762,6 @@ public class AutoRobot {
 
     }
 
-
-
     public void driveBackwardsInches(double inches) {
         driveBackwardsInches(inches, 1);
     }
@@ -750,7 +773,7 @@ public class AutoRobot {
 
     public void driveBackwardsInches(double inches, double powerMultiplier, int movementCurve) {
         //if the wheels get unaligned this will fix it
-        final double ADJUSTVALUE = .01;
+        final double ADJUSTVALUE = .1;
         final double LOWTHRESHOLD = .25;
         frontLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         frontRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -823,11 +846,11 @@ public class AutoRobot {
 
 
             if (TOTALDISTANCE-traveledDistance > 2*TICKS_PER_INCH) {
-                power = .1;
+                power = .2;
                 leftAdjust = 0;
                 rightAdjust = 0;
             } else if (TOTALDISTANCE-traveledDistance > 6*TICKS_PER_INCH){
-                power = .2;
+                power = .3;
             } else if (power < LOWTHRESHOLD) {
                 power = LOWTHRESHOLD;
             }
@@ -1485,7 +1508,7 @@ public class AutoRobot {
         if (direction > 180) {
             direction -= 360;
         }
-        while (angleDifference > .5 || angleDifference < -.5) {
+        while (angleDifference > 2 || angleDifference < -2) {
             currentYaw = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
 
             angleDifference = currentYaw - direction;
@@ -1508,11 +1531,12 @@ public class AutoRobot {
 
 
 
-            if (rX > 0 && rX < .05) {
-                rX = .05;
+
+            if (rX > 0 && rX < .3) {
+                rX = .3;
             }
-            if (rX < 0 && rX > -.05) {
-                rX = -.05;
+            if (rX < 0 && rX > -.3) {
+                rX = -.3;
             }
 
 
@@ -1524,8 +1548,8 @@ public class AutoRobot {
 
 
             frontRightDrive.setPower(-rX);
-            frontLeftDrive.setPower(rX);
-            backLeftDrive.setPower(rX);
+            frontLeftDrive.setPower(+rX);
+            backLeftDrive.setPower(+rX);
             backRightDrive.setPower(-rX);
 
         }
@@ -1559,15 +1583,17 @@ public class AutoRobot {
     }
 
     public void intakeAngleGrab() {
-        intakeAngle.setPosition(INTAKE_ANGLE_GRAB_POSITION);
+        intakeAngle1.setPosition(INTAKE_ONE_ANGLE_GRAB_POSITION);
+        intakeAngle2.setPosition(INTAKE_TWO_ANGLE_GRAB_POSITION);
     }
 
     public void intakeAngleLoad() {
-        intakeAngle.setPosition(INTAKE_ANGLE_LOAD_POSITION);
+        intakeAngle1.setPosition(INTAKE_ONE_ANGLE_LOAD_POSITION);
+        intakeAngle2.setPosition(INTAKE_TWO_ANGLE_LOAD_POSITION);
     }
 
     public void outtakeClawOpen() {
-       outtakeClaw.setPosition(OUTTAKE_CLAW_OPEN_POSITION);
+        outtakeClaw.setPosition(OUTTAKE_CLAW_OPEN_POSITION);
     }
 
     public void outtakeClawClose() {
@@ -1585,14 +1611,25 @@ public class AutoRobot {
     public void outtakeAngleDrop() {
         outtakeAngle.setPosition(OUTTAKE_ANGLE_DROP_POSITION);
     }
+    public void intakeSlidePreload() {
+        slide1.setPosition(SLIDE_ONE_PREPASS_POSITION);
+        slide2.setPosition(SLIDE_TWO_PREPASS_POSITION);
+    }
+
+    public void intakeSlideLoad() {
+        slide1.setPosition(SLIDE_ONE_PASS_POSITION);
+        slide2.setPosition(SLIDE_TWO_PASS_POSITION);
+    }
 
     public void grabAndLoadSample() {
         elevatorLoadPosition();
         outtakeAngleLoad();
         intakeClawClose();
         waitSeconds(.2);
+        intakeSlidePreload();
         intakeAngleLoad();
-        waitSeconds(.5);
+        waitSeconds(1);
+        intakeSlideLoad();
         elevatorBottom();
         waitSeconds(.5);
         outtakeClawClose();
@@ -1666,12 +1703,29 @@ public class AutoRobot {
         backLeftDrive.setDirection(DcMotor.Direction.REVERSE);
         backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
+
+        slide1 = hardwareMap.get(Servo.class, "intakeSlide1");
+        slide2 = hardwareMap.get(Servo.class, "intakeSlide2");
+
+        slide1.setPosition(SLIDE_ONE_PREPASS_POSITION);
+        slide2.setPosition(SLIDE_TWO_PREPASS_POSITION);
+
+        intakePivot = hardwareMap.get(Servo.class, "intakeRotate");
+        intakePivot.setPosition(INTAKE_PIVOT_STRAIGHT_POSITION);
+        waitSeconds(1);
+
         outtakeAngle = hardwareMap.get(Servo.class, "outtakeAngle");
         outtakeClaw = hardwareMap.get(Servo.class, "outtakeClaw");
-        outtakeAngle.setPosition(OUTTAKE_ANGLE_LOAD_POSITION);
+        outtakeAngle.setPosition(OUTTAKE_ANGLE_DROP_POSITION);
         outtakeClaw.setPosition(OUTTAKE_CLAW_CLOSED_POSITION);
-        intakeAngle = hardwareMap.get(Servo.class, "intakeAngle");
-        intakeAngle.setPosition(INTAKE_ANGLE_LOAD_POSITION);
+
+
+        intakeAngle1 = hardwareMap.get(Servo.class, "intakeAngle");
+        intakeAngle1.setPosition(INTAKE_ONE_ANGLE_LOAD_POSITION);
+        intakeAngle2 = hardwareMap.get(Servo.class, "intakeAngle2");
+        intakeAngle2.setPosition(INTAKE_TWO_ANGLE_LOAD_POSITION);
+
+
         intakeClaw = hardwareMap.get(Servo.class, "intakeClaw");
 
         intakeClaw.setPosition(INTAKE_CLAW_OPEN_POSITION);
@@ -1688,11 +1742,15 @@ public class AutoRobot {
         elevator1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         elevator2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
+        waitSeconds(1);
+        outtakeAngleLoad();
+        intakeSlideLoad();
+
 
         imu = hardwareMap.get(IMU.class, "imu");
         IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
-                RevHubOrientationOnRobot.LogoFacingDirection.FORWARD,
-                RevHubOrientationOnRobot.UsbFacingDirection.UP));
+                RevHubOrientationOnRobot.LogoFacingDirection.UP,
+                RevHubOrientationOnRobot.UsbFacingDirection.RIGHT));
         imu.initialize(parameters);
         imu.resetYaw();
 

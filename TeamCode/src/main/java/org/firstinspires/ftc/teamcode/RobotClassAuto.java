@@ -14,6 +14,7 @@ public class RobotClassAuto extends LinearOpMode  {
         telemetry.addData("Status", "Initialized");
         telemetry.update();
         AutoRobot robot = new AutoRobot(hardwareMap, telemetry);
+        robot.initialPosition();
         waitForStart();
 
         robot.getImu().resetYaw(); //if you move the robot at all between init and running

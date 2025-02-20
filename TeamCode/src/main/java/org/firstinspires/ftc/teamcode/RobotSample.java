@@ -6,21 +6,36 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.*;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.libraries.MovementCurves.MovementCurves;
+import org.firstinspires.ftc.teamcode.libraries.robotPeripherals.*;
 
-
+//Manual code, designed for two drivers to grab samples
+//and place them in the high bucket to score 8 points each
+//The robot is handled in modes with search being the primary
+//mode to find the block and match its orientation
 @TeleOp
-public class RobotRedSample extends LinearOpMode {
+public class RobotSample extends LinearOpMode {
+
+    private enum Mode {
+
+        DEFAULT,
+        PUSH,
+        SEARCH,
+        GRAB,
+        PASS,
+        ELEVATOR,
+        READYDROP,
+        DROP;
+    }
+
 
     public void runOpMode() throws InterruptedException {
+        //initialize all robot positions, and relevant variables
         IMU  imu = hardwareMap.get(IMU.class, "imu");
         IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
                 RevHubOrientationOnRobot.LogoFacingDirection.UP,
                 RevHubOrientationOnRobot.UsbFacingDirection.RIGHT));
         imu.initialize(parameters);
         imu.resetYaw();
-        //change SLOWSPEED to change how dpad works
-        //initialize all robot positions, and relevant variables
-        final double SLOWSPEED = .2;
 
         //handle timed events
         long timer = 0;
@@ -29,11 +44,10 @@ public class RobotRedSample extends LinearOpMode {
         //change value to change the speed of joysticks
         final double TOTALSPEED = 1;
 
+        //all relevant drive variables
         double speed;
         double strafe;
         double turn = 0;
-
-
 
         DcMotor backRightDrive = null;
         DcMotor frontRightDrive = null;
@@ -59,79 +73,17 @@ public class RobotRedSample extends LinearOpMode {
         odom.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
 
-        Servo outtakeAngle;
-        final double OUTTAKE_ANGLE_DROP_POSITION = 0.59;
-        final double OUTTAKE_ANGLE_PREDROP_POSITION = 0.62;
-        final double OUTTAKE_ANGLE_LOAD_POSITION = .441+.04;
+        //peripherals of robot
+        OuttakeAngle outtakeAngle = new OuttakeAngle(hardwareMap);
+        OuttakeClaw outtakeClaw = new OuttakeClaw(hardwareMap);
 
-        Servo outtakeClaw;
-        final double OUTTAKE_CLAW_OPEN_POSITION = 0.2;
-        final double OUTTAKE_CLAW_PREDROP_POSITION = .3;
-        final double OUTTAKE_CLAW_CLOSED_POSITION = 0.34;
+        IntakeAngle intakeAngle = new IntakeAngle(hardwareMap);
+        IntakeClaw intakeClaw = new IntakeClaw(hardwareMap);
+        IntakePivot intakePivot = new IntakePivot(hardwareMap);
+        IntakeSlide intakeSlide = new IntakeSlide(hardwareMap);
 
 
-        Servo intakeAngle1;
-        intakeAngle1 = hardwareMap.get(Servo.class, "intakeAngle");
-        Servo intakeAngle2;
-        intakeAngle2 = hardwareMap.get(Servo.class, "intakeAngle2");
-
-        final double INTAKE_ONE_ANGLE_SEARCH_POSITION = 0.065;
-        final double INTAKE_ONE_ANGLE_LOAD_POSITION = .725;
-        final double INTAKE_ONE_ANGLE_GRAB_POSITION = .03;
-
-        final double INTAKE_TWO_ANGLE_SEARCH_POSITION = 0.685;
-        final double INTAKE_TWO_ANGLE_LOAD_POSITION = .025;
-        final double INTAKE_TWO_ANGLE_GRAB_POSITION = .72;
-        Servo intakeClaw;
-        final double INTAKE_CLAW_OPEN_POSITION = .0;
-        final double INTAKE_CLAW_CLOSED_POSITION = .158;
-
-        Servo intakePivot;
-        final double INTAKE_PIVOT_HIGH_TURN_POSITION = .58;
-        final double INTAKE_PIVOT_LOW_TURN_POSITION = .49;
-        final double INTAKE_PIVOT_POSITION_DIFFERENCE = INTAKE_PIVOT_HIGH_TURN_POSITION-INTAKE_PIVOT_LOW_TURN_POSITION;
-        final double INTAKE_PIVOT_PASS_POSITION = 0.49;
-        boolean positiveRotate = true;
-        intakePivot = hardwareMap.get(Servo.class, "intakeRotate");
-
-        outtakeAngle = hardwareMap.get(Servo.class, "outtakeAngle");
-        outtakeClaw = hardwareMap.get(Servo.class, "outtakeClaw");
-
-        intakeAngle1 = hardwareMap.get(Servo.class, "intakeAngle");
-        intakeAngle2 = hardwareMap.get(Servo.class, "intakeAngle2");
-        intakeClaw = hardwareMap.get(Servo.class, "intakeClaw");
-
-        Servo slide1;
-        Servo slide2;
-
-        slide1 = hardwareMap.get(Servo.class, "intakeSlide1");
-        slide2 = hardwareMap.get(Servo.class, "intakeSlide2");
-
-        final double SLIDE_ONE_FAR_POSITION = .35;
-        final double SLIDE_ONE_CLOSE_POSITION = 0;
-        final double SLIDE_ONE_PREPASS_POSITION = .17;
-        final double SLIDE_ONE_PASS_POSITION = .035;
-
-        final double SLIDE_TWO_FAR_POSITION = .65;
-        final double SLIDE_TWO_CLOSE_POSITION = 1;
-        final double SLIDE_TWO_PREPASS_POSITION = .83;
-        final double SLIDE_TWO_PASS_POSITION = .965;
-
-        DcMotor elevator1;
-        DcMotor elevator2;
-
-        elevator1 = hardwareMap.get(DcMotor.class, "elavator1");
-        elevator1.setDirection(DcMotorSimple.Direction.REVERSE);
-        elevator1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        elevator2 = hardwareMap.get(DcMotor.class, "elavator2");
-        elevator2.setDirection(DcMotorSimple.Direction.FORWARD);
-        elevator2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-        elevator1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        elevator2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
-        final int LOW_ELEVATOR_POSITION = 0;
-        final int HIGH_ELEVATOR_POSITION = 3300;
+        Elevator elevator = new Elevator(hardwareMap);
 
         RevColorSensorV3 frontSensor;
         RevColorSensorV3 backSensor;
@@ -139,62 +91,60 @@ public class RobotRedSample extends LinearOpMode {
         frontSensor = hardwareMap.get(RevColorSensorV3.class, "c1");
         backSensor = hardwareMap.get(RevColorSensorV3.class, "c2");
 
+        //thresholds for sensors so they can find blocks
         final int FRONTDISTANCETHRESHOLD = 40;
         final int BACKDISTANCETHRESHOLD = 35;
-        boolean XPressed = false;
 
-        int currentMode = 0;
-        final int DEFAULTMODE = 0;
-        final int PUSHMODE = 1;
-        final int SEARCHMODE = 2;
-        final int GRABMODE = 3;
-        final int PASSMODE = 4;
-        final int ELEVATORMODE = 5;
-        final int READYDROPMODE = 6;
-        final int DROPMODE = 7;
+        //starts at default mode
+        Mode currentMode = Mode.DEFAULT;
 
         long currentTime;
         double currentTimeSeconds;
 
-        outtakeAngle.setPosition(OUTTAKE_ANGLE_DROP_POSITION);
-        outtakeClaw.setPosition(OUTTAKE_CLAW_CLOSED_POSITION);
+
+        //initial robot position
+        // required so robot fits size requirements
+        //and peripherals do not collide
+        outtakeAngle.drop();
+        outtakeClaw.close();
         timer = System.nanoTime();
-        slide1.setPosition(SLIDE_ONE_PASS_POSITION);
-        slide2.setPosition(SLIDE_TWO_PASS_POSITION);
+        intakeSlide.close();
         while(timer + 1_000_000_000 > System.nanoTime());
-        intakeAngle1.setPosition(INTAKE_ONE_ANGLE_LOAD_POSITION);
-        intakeAngle2.setPosition(INTAKE_TWO_ANGLE_LOAD_POSITION);
-        intakeClaw.setPosition(INTAKE_CLAW_OPEN_POSITION);
-        outtakeAngle.setPosition(OUTTAKE_ANGLE_LOAD_POSITION);
-        intakePivot.setPosition(INTAKE_PIVOT_PASS_POSITION);
+        intakeAngle.load();
+        intakeClaw.close();
+        outtakeAngle.load();
+        intakePivot.pass();
 
         waitForStart();
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
-            //all drive control, joysticks
+
+            //get current time in nanoseconds and seconds
             currentTime = System.nanoTime();
             currentTimeSeconds = currentTime/1_000_000_000.0;
 
-            speed = -gamepad1.left_stick_y*0.5;
-            strafe = gamepad1.left_stick_x*0.5;
-            turn = gamepad1.right_stick_x*0.5;
+            //calculate what direction the robot should drive
+            speed = -gamepad1.left_stick_y*TOTALSPEED;
+            strafe = gamepad1.left_stick_x*TOTALSPEED;
+            turn = gamepad1.right_stick_x*TOTALSPEED;
 
-            if (gamepad2.triangle && currentMode != READYDROPMODE) {
-                currentMode = DEFAULTMODE;
+            //Input sets the mode
+            if (gamepad2.triangle && currentMode != Mode.READYDROP) {
+                currentMode = Mode.DEFAULT;
             }
 
-            if (gamepad2.square&& currentMode != READYDROPMODE) {
-                currentMode = GRABMODE;
+            if (gamepad2.square&& currentMode != Mode.READYDROP) {
+                currentMode = Mode.GRAB;
                 timer = 2*currentTime;
                 timerSeconds = 2*currentTimeSeconds;
             }
 
-            if (gamepad2.a && currentMode != READYDROPMODE) {
-                currentMode = SEARCHMODE;
+            if (gamepad2.a && currentMode != Mode.READYDROP) {
+                currentMode = Mode.SEARCH;
                 timer = currentTime;
                 timerSeconds = currentTimeSeconds;
             }
-
+            //keep track of relevant data
             telemetry.addData("currentMode", currentMode);
             telemetry.addData("sens1R", frontSensor.getDistance(DistanceUnit.MM));
             telemetry.addData("sens2R", backSensor.getDistance(DistanceUnit.MM));
@@ -249,70 +199,45 @@ public class RobotRedSample extends LinearOpMode {
                 //first state, front claw goes into search position, and oscillates until it finds a block
                 //then the robot lowers the claw and goes into grab mode
                 //robot moves slowly in this mode to help with accurately finding blocks
-                case SEARCHMODE:
+                case SEARCH:
 
                     speed *= .3;
                     strafe *= .4;
                     turn *= .5;
 
                     if (gamepad2.right_trigger > 0.2) {
-                        slide1.setPosition(slide1.getPosition() + 0.0055);//.decrease();
-                        slide2.setPosition(slide2.getPosition() - 0.0055);//.increase();
+                      intakeSlide.setPosition(intakeSlide.getPosition()+.005);
 
                     }
                     if (gamepad2.left_trigger > 0.2) {
-                        slide1.setPosition(slide1.getPosition() - 0.0055);//.increase();
-                        slide2.setPosition(slide2.getPosition() + 0.0055);//.decrease();
+                        intakeSlide.setPosition(intakeSlide.getPosition()-.005);
                     }
-                    if (slide1.getPosition() > SLIDE_ONE_FAR_POSITION) {
-                        slide1.setPosition(SLIDE_ONE_FAR_POSITION);
-                    }
-                    if (slide2.getPosition() < SLIDE_TWO_FAR_POSITION) {
-                        slide2.setPosition(SLIDE_TWO_FAR_POSITION);
-                    }
-
-                    if (slide1.getPosition() < SLIDE_ONE_CLOSE_POSITION) {
-                        slide1.setPosition(SLIDE_ONE_CLOSE_POSITION);
-                    }
-                    if (slide2.getPosition() > SLIDE_TWO_CLOSE_POSITION) {
-                        slide2.setPosition(SLIDE_TWO_CLOSE_POSITION);
-                    }
-
-
 
                     frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
                     backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
                     frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
                     frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
-
+                    //if block is found go into grab mode
                     if (frontSensor.getDistance(DistanceUnit.MM) < FRONTDISTANCETHRESHOLD
                             && backSensor.getDistance(DistanceUnit.MM) < BACKDISTANCETHRESHOLD) {
                         intakePivot.setPosition(intakePivot.getPosition());
-                        intakeAngle1.setPosition(INTAKE_ONE_ANGLE_GRAB_POSITION);
-
-                        intakeAngle2.setPosition(INTAKE_TWO_ANGLE_GRAB_POSITION);
-                        currentMode = GRABMODE;
+                        intakeAngle.grab();
+                        currentMode = Mode.GRAB;
                         timer = currentTime*2;
                         timerSeconds = currentTimeSeconds*2;
                     }
 
-
-                    intakePivot.setPosition(INTAKE_PIVOT_LOW_TURN_POSITION +
-                            (MovementCurves.linear(((double)(currentTime%2_500_000_000L))/2_500_000_000.0D)*(INTAKE_PIVOT_POSITION_DIFFERENCE)));
-                    telemetry.addData("SWITCH", (currentTimeSeconds*2)%5);
-
+                    //oscillate pivot in the case that the block is not aligned
+                    intakePivot.setPosition(MovementCurves.linear(
+                            ((double)(currentTime%2_500_000_000L))/2_500_000_000.0D));
 
                     //all states the robot should be in when in this mode
-                    elevator1.setTargetPosition(LOW_ELEVATOR_POSITION);
-                    elevator2.setTargetPosition(LOW_ELEVATOR_POSITION);
-                    elevator1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                    elevator2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                    outtakeAngle.setPosition(OUTTAKE_ANGLE_LOAD_POSITION);
-                    outtakeClaw.setPosition(OUTTAKE_CLAW_OPEN_POSITION);
-                    intakeClaw.setPosition(INTAKE_CLAW_OPEN_POSITION);
-                    intakeAngle1.setPosition(INTAKE_ONE_ANGLE_SEARCH_POSITION);
-                    intakeAngle2.setPosition(INTAKE_TWO_ANGLE_SEARCH_POSITION);
+                    elevator.bottom();
+                    outtakeAngle.load();
+                    outtakeClaw.open();
+                    intakeClaw.open();
+                    intakeAngle.search();
 
                     frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
                     backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
@@ -322,132 +247,101 @@ public class RobotRedSample extends LinearOpMode {
 
                 //initialized after finding a block or override button is pressed
                 //in this mode the claw lowers and stops moving, allowing user to grab block
-                case GRABMODE:
+                case GRAB:
 
                     speed *= .3;
                     strafe *= .4;
                     turn *= .5;
 
                     if (gamepad2.right_trigger > 0.2) {
-                        slide1.setPosition(slide1.getPosition() + 0.0025);//.decrease();
-                        slide2.setPosition(slide2.getPosition() - 0.0025);//.increase();
+                        intakeSlide.setPosition(intakeSlide.getPosition()+.005);
                     }
                     if (gamepad2.left_trigger > 0.2) {
-                        slide1.setPosition(slide1.getPosition() - 0.0025);//.increase();
-                        slide2.setPosition(slide2.getPosition() + 0.0025);//.decrease();
+                        intakeSlide.setPosition(intakeSlide.getPosition()-.005);
                     }
                     frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
                     backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
                     frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
                     frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-                    intakeAngle1.setPosition(INTAKE_ONE_ANGLE_GRAB_POSITION);
-                    intakeAngle2.setPosition(INTAKE_TWO_ANGLE_GRAB_POSITION);
-
+                    intakeAngle.grab();
 
                     //grabs block and gets ready to load
                     if(gamepad2.right_bumper) {
-                        intakeClaw.setPosition(INTAKE_CLAW_CLOSED_POSITION);
+                        intakeClaw.close();
                         timer = currentTime;
                         timerSeconds = currentTimeSeconds;
                     }
 
                     if (timerSeconds + .5 < currentTimeSeconds) {
-                        currentMode = PASSMODE;
+                        currentMode = Mode.PASS;
                         timer = currentTime;
                         timerSeconds = currentTimeSeconds;
                     } //else if (timerSeconds + .5 < currentTimeSeconds) {
                     //  currentMode = SEARCHMODE;
                     //}
 
-                    elevator1.setTargetPosition(LOW_ELEVATOR_POSITION);
-                    elevator2.setTargetPosition(LOW_ELEVATOR_POSITION);
-                    elevator1.setPower(1);
-                    elevator2.setPower(1);
-                    elevator1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                    elevator2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                    outtakeAngle.setPosition(OUTTAKE_ANGLE_LOAD_POSITION);
-                    outtakeClaw.setPosition(OUTTAKE_CLAW_OPEN_POSITION);
+                    elevator.bottom();
+                    outtakeAngle.load();
+                    outtakeClaw.open();
                     break;
 
                 // Block is now grabbed and ready to be passed through the robot,
-                //consistent issue is servo unalignment, will need to be fixed in future
-                case PASSMODE:
+                //consistent issue is servo alignment, will need to be fixed in future
+                case PASS:
 
                     //initial positions, lets driver move full speed so they may get ready to place
                     frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
                     backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
                     frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
                     frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-                    intakeAngle1.setPosition(INTAKE_ONE_ANGLE_LOAD_POSITION);
-                    intakeAngle2.setPosition(INTAKE_TWO_ANGLE_LOAD_POSITION);
-                    intakePivot.setPosition(INTAKE_PIVOT_PASS_POSITION);
-
+                    intakeAngle.load();
+                    intakePivot.pass();
 
                     if (timerSeconds + 2.25 < currentTimeSeconds) {
-                        currentMode = ELEVATORMODE;
+                        currentMode = Mode.ELEVATOR;
                         timer = currentTime;
                         timerSeconds = currentTimeSeconds;
                     }
 
                     else if (timerSeconds + 2.0 < currentTimeSeconds) {
-                        intakeClaw.setPosition(INTAKE_CLAW_OPEN_POSITION);
-
+                        intakeClaw.open();
                     } else if (timerSeconds + 1.5 < currentTimeSeconds) {
-
-                        slide1.setPosition(SLIDE_ONE_PASS_POSITION);
-                        slide2.setPosition(SLIDE_TWO_PASS_POSITION);
-                        outtakeClaw.setPosition(OUTTAKE_CLAW_CLOSED_POSITION);
+                        intakeSlide.close();
+                        outtakeClaw.close();
                     } else if (timerSeconds + 1 < currentTimeSeconds) {
-
-                        slide1.setPosition(SLIDE_ONE_PASS_POSITION);
-                        slide2.setPosition(SLIDE_TWO_PASS_POSITION);
-
+                        intakeSlide.close();
                     } else if(timerSeconds + .5 < currentTimeSeconds) {
-                        slide1.setPosition(SLIDE_ONE_PREPASS_POSITION);
-                        slide2.setPosition(SLIDE_TWO_PREPASS_POSITION);
-                        outtakeAngle.setPosition(OUTTAKE_ANGLE_LOAD_POSITION);
-                        outtakeClaw.setPosition(OUTTAKE_CLAW_OPEN_POSITION);
-                        elevator1.setTargetPosition(LOW_ELEVATOR_POSITION);
-                        elevator2.setTargetPosition(LOW_ELEVATOR_POSITION);
-                        elevator1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                        elevator2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
+                        intakeSlide.prepass();
+                        outtakeAngle.load();
+                        outtakeClaw.open();
+                        elevator.bottom();
                     } else {
-                        slide1.setPosition(SLIDE_ONE_PREPASS_POSITION);
-                        slide2.setPosition(SLIDE_TWO_PREPASS_POSITION);
+                        intakeSlide.prepass();
                     }
                     break;
 
-                //after the pass has occured the block is locked into place so
+                //after the pass has occurred the block is locked into place so
                 //that it is consistently dropped into the bucket when aligned
                 //elevators are also sent to top so that the robot is ready to drop
-                case ELEVATORMODE:
-                    intakeAngle1.setPosition(INTAKE_ONE_ANGLE_LOAD_POSITION);
-                    intakeAngle2.setPosition(INTAKE_TWO_ANGLE_LOAD_POSITION);
-                    elevator1.setTargetPosition(HIGH_ELEVATOR_POSITION);
-                    elevator2.setTargetPosition(HIGH_ELEVATOR_POSITION);
-                    elevator1.setPower(1);
-                    elevator2.setPower(1);
-                    elevator1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                    elevator2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                    outtakeClaw.setPosition(OUTTAKE_CLAW_CLOSED_POSITION);
+                case ELEVATOR:
+                    intakeAngle.load();
+                    elevator.top();
 
                     frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
                     backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
                     frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
                     frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
                     if (timerSeconds + .8 < currentTimeSeconds) {
-                        outtakeClaw.setPosition(OUTTAKE_CLAW_CLOSED_POSITION);
-                        outtakeAngle.setPosition(OUTTAKE_ANGLE_DROP_POSITION);
+                        outtakeClaw.close();
+                        outtakeAngle.drop();
                     } else {
-                        outtakeClaw.setPosition(OUTTAKE_CLAW_PREDROP_POSITION);
-                        outtakeAngle.setPosition(OUTTAKE_ANGLE_PREDROP_POSITION);
+                        outtakeClaw.predrop();
+                        outtakeAngle.predrop();
                     }
 
-                    if (elevator1.getCurrentPosition() > HIGH_ELEVATOR_POSITION-50
-                            && elevator2.getCurrentPosition() > HIGH_ELEVATOR_POSITION-50) {
-                        currentMode = READYDROPMODE;
+                    if (elevator.getPosition() > .99) {
+                        currentMode = Mode.READYDROP;
                     }
 
                     break;
@@ -455,34 +349,29 @@ public class RobotRedSample extends LinearOpMode {
                 //position for when the block is loaded and ready to be placed,
                 //it is not possible to change modes without first dropping the block
                 //to prevent the block from ending up stuck
-                case READYDROPMODE:
+                case READYDROP:
 
                     frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
                     backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
                     frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
                     frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
                     if (gamepad2.circle) {
-                        currentMode = DROPMODE;
+                        currentMode = Mode.DROP;
                         timer = currentTime;
                         timerSeconds = currentTimeSeconds;
                     } else {
 
-                        intakeAngle1.setPosition(INTAKE_ONE_ANGLE_LOAD_POSITION);
-                        intakeAngle2.setPosition(INTAKE_TWO_ANGLE_LOAD_POSITION);
-
-                        elevator1.setTargetPosition(HIGH_ELEVATOR_POSITION);
-                        elevator2.setTargetPosition(HIGH_ELEVATOR_POSITION);
-                        elevator1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                        elevator2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                        outtakeAngle.setPosition(OUTTAKE_ANGLE_DROP_POSITION);
-                        outtakeClaw.setPosition(OUTTAKE_CLAW_CLOSED_POSITION);
+                        intakeAngle.load();
+                        elevator.top();
+                        outtakeAngle.drop();
+                        outtakeClaw.close();
                     }
                     break;
 
                 //Robot controls lock and block drops, preventing the block
                 //from missing the bucket
-                case DROPMODE:
-                    outtakeClaw.setPosition(OUTTAKE_CLAW_OPEN_POSITION);
+                case DROP:
+                    outtakeClaw.open();
 
                     frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
                     backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -492,7 +381,7 @@ public class RobotRedSample extends LinearOpMode {
                     strafe = 0;
                     turn = 0;
                     if (timerSeconds + .75 < currentTimeSeconds) {
-                        currentMode = DEFAULTMODE;
+                        currentMode = Mode.DEFAULT;
                     }
                     break;
 
@@ -504,18 +393,13 @@ public class RobotRedSample extends LinearOpMode {
                     backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
                     frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
                     frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-                    intakePivot.setPosition(INTAKE_PIVOT_PASS_POSITION);
-                    intakeClaw.setPosition(INTAKE_CLAW_OPEN_POSITION);
-                    intakeAngle1.setPosition(INTAKE_ONE_ANGLE_LOAD_POSITION);
-                    intakeAngle2.setPosition(INTAKE_TWO_ANGLE_LOAD_POSITION);
-                    outtakeAngle.setPosition(OUTTAKE_ANGLE_LOAD_POSITION);
-                    outtakeClaw.setPosition(OUTTAKE_CLAW_OPEN_POSITION);
-                    elevator1.setTargetPosition(LOW_ELEVATOR_POSITION);
-                    elevator2.setTargetPosition(LOW_ELEVATOR_POSITION);
-                    elevator1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                    elevator2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                    slide1.setPosition(SLIDE_ONE_PREPASS_POSITION);
-                    slide2.setPosition(SLIDE_TWO_PREPASS_POSITION);
+                    intakePivot.pass();
+                    intakeClaw.open();
+                    intakeAngle.load();
+                    outtakeAngle.load();
+                    outtakeClaw.open();
+                    elevator.bottom();
+                    intakeSlide.prepass();
             }
 
 

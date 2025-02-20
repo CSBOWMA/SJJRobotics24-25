@@ -5,7 +5,7 @@ import com.qualcomm.robotcore.hardware.*;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.libraries.MovementCurves.MovementCurves;
-
+import org.firstinspires.ftc.teamcode.libraries.robotPeripherals.*;
 import static java.lang.Math.*;
 
 
@@ -15,53 +15,21 @@ public class AutoRobot {
     private DcMotor frontLeftDrive;
     private DcMotor backLeftDrive;
 
-    private Servo outtakeAngle;
-    private final double OUTTAKE_ANGLE_DROP_POSITION = .59;
-    private final double OUTTAKE_ANGLE_LOAD_POSITION = .441+0.04;
-    private final double OUTTAKE_ANGLE_READY_LOAD_POSITION = .443+0.028;
+    private OuttakeAngle outtakeAngle;
+    private OuttakeClaw outtakeClaw;
 
-    private Servo outtakeClaw;
-    private final double OUTTAKE_CLAW_OPEN_POSITION = 0.2;
-    private final double OUTTAKE_CLAW_CLOSED_POSITION = 0.34;
+    private IntakeAngle intakeAngle;
+
+    private IntakeClaw intakeClaw;
 
 
-    Servo intakeAngle1;
-    Servo intakeAngle2;
-
-    final double INTAKE_ONE_ANGLE_SEARCH_POSITION = 0.07;
-    final double INTAKE_ONE_ANGLE_LOAD_POSITION = .73;
-    final double INTAKE_ONE_ANGLE_GRAB_POSITION = .04;
-
-    final double INTAKE_TWO_ANGLE_SEARCH_POSITION = 0.68;
-    final double INTAKE_TWO_ANGLE_LOAD_POSITION = .04;
-    final double INTAKE_TWO_ANGLE_GRAB_POSITION = .71;
-
-    private Servo intakeClaw;
-    private final double INTAKE_CLAW_OPEN_POSITION = .0;
-    private final double INTAKE_CLAW_CLOSED_POSITION = 0.17;
-
-    //private Servo intakeSlide1; needs to be implemented
-    //private Servo intakeSlide2; needs to be implemented
-
-    private DcMotor elevator1;
-    private DcMotor elevator2;
+    private Elevator elevator;
 
     private DcMotor forwardOdometry;
     private DcMotor sidewaysOdometry;
 
-    private Servo slide1;
-    private Servo slide2;
+    private IntakeSlide intakeSlide;
 
-
-    final double SLIDE_ONE_FAR_POSITION = .35;
-    final double SLIDE_ONE_CLOSE_POSITION = 0;
-    final double SLIDE_ONE_PREPASS_POSITION = .17;
-    final double SLIDE_ONE_PASS_POSITION = .05;
-
-    final double SLIDE_TWO_FAR_POSITION = .65;
-    final double SLIDE_TWO_CLOSE_POSITION = 1;
-    final double SLIDE_TWO_PREPASS_POSITION = .83;
-    final double SLIDE_TWO_PASS_POSITION = .95;
 
 
     private IMU imu;
@@ -70,16 +38,12 @@ public class AutoRobot {
     private static final double WHEEL_DIAMETER = 48; // In milimeters
     private static final double TICKS_PER_REVOLUTION = 1120;
 
-    //private static final int TICKS_PER_INCH = 45;
 
     private static final int TICKS_PER_INCH = 337;
 
-    private Servo intakePivot;
-    final double INTAKE_PIVOT_STRAIGHT_POSITION = .49;
+    private IntakePivot intakePivot;
 
     Telemetry telemetry;
-    //private double current robotX; unable to reliably solve
-    //private double current robotY;
 
 
     //this function will move the robot x distance and y distance, and make it face the direction
@@ -138,12 +102,12 @@ public class AutoRobot {
                 if (angleDifference > 0) {
                     rX = .3 * MovementCurves.circleCurve(angleDifference / 360);
                 }
-                ;
+
                 if (angleDifference < 0) {
                     angleDifference *= -1;
                     rX = -.3 * MovementCurves.circleCurve(angleDifference / 360);
                 }
-                ;
+
 
 
                 if (rX > 0 && rX < .1) {
@@ -165,7 +129,7 @@ public class AutoRobot {
                 moveSpeed = .3 * sin(PI * (timeAlotted));
                 //       toGo.scaleVector(moveSpeed);
             } else {
-                //     toGo.scaleVector(0);
+                //toGo.scaleVector(0);
             }
 
             // frontRightDrive.setPower(toGo.getJ() - toGo.getI() - rX); //double check these values
@@ -522,9 +486,9 @@ public class AutoRobot {
             }
 
             //assign power to wheels
-            frontRightDrive.setPower(+power - rightAdjust);
+            frontRightDrive.setPower(power - rightAdjust);
             frontLeftDrive.setPower(-power + leftAdjust);
-            backLeftDrive.setPower(+power - leftAdjust);
+            backLeftDrive.setPower(power - leftAdjust);
             backRightDrive.setPower(-power + rightAdjust);
 
             traveledDistance = sidewaysOdometry.getCurrentPosition();
@@ -638,9 +602,9 @@ public class AutoRobot {
 
             //assign power to wheels
             frontRightDrive.setPower(-power + leftAdjust);
-            frontLeftDrive.setPower(+power - rightAdjust);
+            frontLeftDrive.setPower(power - rightAdjust);
             backLeftDrive.setPower(-power + leftAdjust);
-            backRightDrive.setPower(+power - rightAdjust);
+            backRightDrive.setPower(power - rightAdjust);
 
             traveledDistance = -sidewaysOdometry.getCurrentPosition();
         }
@@ -1575,50 +1539,59 @@ public class AutoRobot {
     }
 
     public void intakeClawOpen() {
-        intakeClaw.setPosition(INTAKE_CLAW_OPEN_POSITION);
+        intakeClaw.open();
     }
 
     public void intakeClawClose() {
-        intakeClaw.setPosition(INTAKE_CLAW_CLOSED_POSITION);
+        intakeClaw.close();
     }
 
     public void intakeAngleGrab() {
-        intakeAngle1.setPosition(INTAKE_ONE_ANGLE_GRAB_POSITION);
-        intakeAngle2.setPosition(INTAKE_TWO_ANGLE_GRAB_POSITION);
+        intakeAngle.grab();
     }
 
     public void intakeAngleLoad() {
-        intakeAngle1.setPosition(INTAKE_ONE_ANGLE_LOAD_POSITION);
-        intakeAngle2.setPosition(INTAKE_TWO_ANGLE_LOAD_POSITION);
+        intakeAngle.load();
     }
 
     public void outtakeClawOpen() {
-        outtakeClaw.setPosition(OUTTAKE_CLAW_OPEN_POSITION);
+        outtakeClaw.open();
     }
 
     public void outtakeClawClose() {
-        outtakeClaw.setPosition(OUTTAKE_CLAW_CLOSED_POSITION);
+        outtakeClaw.close();
     }
 
-    public void outtakeClawReady() {
-        outtakeClaw.setPosition(OUTTAKE_ANGLE_READY_LOAD_POSITION);
-    }
 
     public void outtakeAngleLoad() {
-        outtakeAngle.setPosition(OUTTAKE_ANGLE_LOAD_POSITION);
+        outtakeAngle.load();
     }
 
     public void outtakeAngleDrop() {
-        outtakeAngle.setPosition(OUTTAKE_ANGLE_DROP_POSITION);
+        outtakeAngle.drop();
     }
-    public void intakeSlidePreload() {
-        slide1.setPosition(SLIDE_ONE_PREPASS_POSITION);
-        slide2.setPosition(SLIDE_TWO_PREPASS_POSITION);
+    public void intakeSlidePrepass() {
+        intakeSlide.prepass();
     }
 
     public void intakeSlideLoad() {
-        slide1.setPosition(SLIDE_ONE_PASS_POSITION);
-        slide2.setPosition(SLIDE_TWO_PASS_POSITION);
+        intakeSlide.load();
+    }
+
+    public void elevatorTop() {
+        elevator.top();
+    }
+
+    public void elevatorBottom() {
+        elevator.bottom();
+    }
+
+    public void elevatorLoadPosition() {
+        elevator.load();
+    }
+
+    public IMU getImu() {
+        return imu;
     }
 
     public void grabAndLoadSample() {
@@ -1626,7 +1599,7 @@ public class AutoRobot {
         outtakeAngleLoad();
         intakeClawClose();
         waitSeconds(.2);
-        intakeSlidePreload();
+        intakeSlidePrepass();
         intakeAngleLoad();
         waitSeconds(1);
         intakeSlideLoad();
@@ -1650,38 +1623,19 @@ public class AutoRobot {
         intakeClawOpen();
     }
 
-
-
-    public void elevatorTop() {
-        elevator2.setTargetPosition(3300);
-        elevator1.setTargetPosition(3300);
-        elevator1.setPower(1);
-        elevator2.setPower(1);
-        elevator1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        elevator2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-    }
-
-    public void elevatorBottom() {
-        elevator2.setTargetPosition(0);
-        elevator1.setTargetPosition(0);
-        elevator1.setPower(1);
-        elevator2.setPower(1);
-        elevator1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        elevator2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-    }
-
-    public void elevatorLoadPosition() {
-        elevator2.setTargetPosition(100);
-        elevator1.setTargetPosition(100);
-        elevator1.setPower(1);
-        elevator2.setPower(1);
-        elevator1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        elevator2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-    }
-
-
-    public IMU getImu() {
-        return imu;
+    public void initialPosition() {
+        outtakeAngle.drop();
+        waitSeconds(.5);
+        intakeAngle.load();
+        waitSeconds(.5);
+        intakeSlide.prepass();
+        intakePivot.pass();
+        waitSeconds(.5);
+        outtakeClaw.close();
+        intakeClaw.open();
+        waitSeconds(.5);
+        outtakeAngleLoad();
+        intakeSlideLoad();
     }
 
 
@@ -1704,47 +1658,19 @@ public class AutoRobot {
         backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
 
-        slide1 = hardwareMap.get(Servo.class, "intakeSlide1");
-        slide2 = hardwareMap.get(Servo.class, "intakeSlide2");
-
-        slide1.setPosition(SLIDE_ONE_PREPASS_POSITION);
-        slide2.setPosition(SLIDE_TWO_PREPASS_POSITION);
-
-        intakePivot = hardwareMap.get(Servo.class, "intakeRotate");
-        intakePivot.setPosition(INTAKE_PIVOT_STRAIGHT_POSITION);
-        waitSeconds(1);
-
-        outtakeAngle = hardwareMap.get(Servo.class, "outtakeAngle");
-        outtakeClaw = hardwareMap.get(Servo.class, "outtakeClaw");
-        outtakeAngle.setPosition(OUTTAKE_ANGLE_DROP_POSITION);
-        outtakeClaw.setPosition(OUTTAKE_CLAW_CLOSED_POSITION);
 
 
-        intakeAngle1 = hardwareMap.get(Servo.class, "intakeAngle");
-        intakeAngle1.setPosition(INTAKE_ONE_ANGLE_LOAD_POSITION);
-        intakeAngle2 = hardwareMap.get(Servo.class, "intakeAngle2");
-        intakeAngle2.setPosition(INTAKE_TWO_ANGLE_LOAD_POSITION);
+        outtakeAngle = new OuttakeAngle(hardwareMap);
+        outtakeClaw = new OuttakeClaw(hardwareMap);
 
 
-        intakeClaw = hardwareMap.get(Servo.class, "intakeClaw");
+        intakeSlide = new IntakeSlide(hardwareMap);
+        intakeAngle = new IntakeAngle(hardwareMap);
+        intakeClaw = new IntakeClaw(hardwareMap);
+        intakePivot = new IntakePivot(hardwareMap);
 
-        intakeClaw.setPosition(INTAKE_CLAW_OPEN_POSITION);
-        //intakeSlide1 = hardwareMap.get(Servo.class, "intakeSlide1");
-        //intakeSlide2 = hardwareMap.get(Servo.class, "intakeSlide2");
+        elevator = new Elevator(hardwareMap);
 
-        elevator1 = hardwareMap.get(DcMotor.class, "elavator1");
-        elevator1.setDirection(DcMotorSimple.Direction.REVERSE);
-        elevator1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        elevator2 = hardwareMap.get(DcMotor.class, "elavator2");
-        elevator2.setDirection(DcMotorSimple.Direction.FORWARD);
-        elevator2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-        elevator1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        elevator2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
-        waitSeconds(1);
-        outtakeAngleLoad();
-        intakeSlideLoad();
 
 
         imu = hardwareMap.get(IMU.class, "imu");

@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.libraries.MovementCurves;
+package org.firstinspires.ftc.teamcode.libraries.movementCurves;
 
 public class MovementCurvesTest {
     public static void main(String[] args) {

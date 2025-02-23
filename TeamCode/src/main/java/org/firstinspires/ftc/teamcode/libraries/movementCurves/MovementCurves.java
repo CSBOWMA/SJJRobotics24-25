@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.libraries.MovementCurves;
+package org.firstinspires.ftc.teamcode.libraries.movementCurves;
 
 public class MovementCurves {
     //each of these curves work by taking in a value (0,1) and returning an

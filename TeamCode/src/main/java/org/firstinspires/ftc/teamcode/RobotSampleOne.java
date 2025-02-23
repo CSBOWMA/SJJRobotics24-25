@@ -5,7 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.*;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.teamcode.libraries.MovementCurves.MovementCurves;
+import org.firstinspires.ftc.teamcode.libraries.movementCurves.MovementCurves;
 import org.firstinspires.ftc.teamcode.libraries.robotPeripherals.*;
 
 
@@ -73,7 +73,6 @@ public class RobotSampleOne extends LinearOpMode {
         odom.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         odom.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-
         //peripherals of robot
         OuttakeAngle outtakeAngle = new OuttakeAngle(hardwareMap);
         OuttakeClaw outtakeClaw = new OuttakeClaw(hardwareMap);
@@ -82,7 +81,6 @@ public class RobotSampleOne extends LinearOpMode {
         IntakeClaw intakeClaw = new IntakeClaw(hardwareMap);
         IntakePivot intakePivot = new IntakePivot(hardwareMap);
         IntakeSlide intakeSlide = new IntakeSlide(hardwareMap);
-
 
         Elevator elevator = new Elevator(hardwareMap);
 
@@ -101,7 +99,6 @@ public class RobotSampleOne extends LinearOpMode {
 
         long currentTime;
         double currentTimeSeconds;
-
 
         //initial robot position
         // required so robot fits size requirements
@@ -402,8 +399,6 @@ public class RobotSampleOne extends LinearOpMode {
                     elevator.bottom();
                     intakeSlide.prepass();
             }
-
-
 
 
             //assign power to wheels

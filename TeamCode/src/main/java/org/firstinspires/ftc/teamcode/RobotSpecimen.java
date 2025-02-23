@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.*;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.libraries.robotPeripherals.*;
-import org.firstinspires.ftc.teamcode.libraries.MovementCurves.MovementCurves;
+import org.firstinspires.ftc.teamcode.libraries.movementCurves.MovementCurves;
 
 
 //Manual code, designed for two drivers to grab samples
